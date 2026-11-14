@@ -253,26 +253,44 @@ function perGameNote(value: number, games?: number): string | undefined {
   return games ? `${perGame(value, games)} per game` : undefined;
 }
 
-function WonRing({ won, total }: { won: number; total: number }) {
+function WonRing({ won, lost, neutral }: { won: number; lost: number; neutral: number }) {
+  const total = won + lost + neutral;
   const rate = pct(won, total);
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
-  const filled = (rate / 100) * circumference;
+  const arcs = [
+    { key: "won", value: won, color: "#1f8a4c" },
+    { key: "neutral", value: neutral, color: "#c4cfd9" },
+    { key: "lost", value: lost, color: "#e0a82e" },
+  ];
+  let offset = 0;
 
   return (
     <div className="bw-ring">
       <svg width="150" height="150" viewBox="0 0 150 150" aria-hidden="true">
-        <circle cx="75" cy="75" r={radius} fill="none" stroke="#e0a82e" strokeWidth="16" />
-        <circle
-          cx="75"
-          cy="75"
-          r={radius}
-          fill="none"
-          stroke="#1f8a4c"
-          strokeWidth="16"
-          strokeDasharray={`${filled} ${circumference - filled}`}
-          transform="rotate(-90 75 75)"
-        />
+        {total === 0 ? (
+          <circle cx="75" cy="75" r={radius} fill="none" stroke="#c4cfd9" strokeWidth="16" />
+        ) : (
+          arcs.map((arc) => {
+            const len = (arc.value / total) * circumference;
+            const dashOffset = -offset;
+            offset += len;
+            return (
+              <circle
+                key={arc.key}
+                cx="75"
+                cy="75"
+                r={radius}
+                fill="none"
+                stroke={arc.color}
+                strokeWidth="16"
+                strokeDasharray={`${len} ${circumference - len}`}
+                strokeDashoffset={dashOffset}
+                transform="rotate(-90 75 75)"
+              />
+            );
+          })
+        )}
       </svg>
       <div className="bw-ring__center">
         <span className="bw-ring__value">{rate}%</span>
@@ -456,7 +474,7 @@ function DefensivePage(props: StatsGamePdfSheetProps) {
         <div className="bw-body">
           <section className="bw-card bw-card--def bw-card--fill">
             <div className="bw-defense">
-              <WonRing won={defensive1v1.won} total={defensive1v1.total} />
+              <WonRing won={defensive1v1.won} lost={defensive1v1.lost} neutral={defensive1v1.neutral} />
               <div className="bw-defense__figures">
                 <div className="bw-kpi">
                   <span className="bw-kpi__value">{formatCount(defensive1v1.total)}</span>
