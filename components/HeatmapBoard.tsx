@@ -49,13 +49,13 @@ function paintHeat(canvas: HTMLCanvasElement, points: HeatPoint[]) {
   const octx = off.getContext("2d");
   if (!octx) return;
 
-  const radius = sw * 0.07;
+  const radius = sw * 0.08;
   octx.globalCompositeOperation = "lighter";
   for (const point of points) {
     const cx = (point.x / FIELD_W) * sw;
     const cy = (point.y / FIELD_H) * sh;
     const gradient = octx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-    gradient.addColorStop(0, "rgba(255,255,255,0.55)");
+    gradient.addColorStop(0, "rgba(255,255,255,0.42)");
     gradient.addColorStop(1, "rgba(255,255,255,0)");
     octx.fillStyle = gradient;
     octx.beginPath();
@@ -75,13 +75,23 @@ function paintHeat(canvas: HTMLCanvasElement, points: HeatPoint[]) {
     data[i] = r;
     data[i + 1] = g;
     data[i + 2] = b;
-    data[i + 3] = Math.round(Math.min(intensity * 1.15, 1) * 235);
+    data[i + 3] = Math.round(Math.min(intensity * 1.05, 1) * 215);
   }
   octx.putImageData(image, 0, 0);
 
+  const mx = (2 / FIELD_W) * width;
+  const my = (2 / FIELD_H) * height;
+  const mw = ((FIELD_W - 4) / FIELD_W) * width;
+  const mh = ((FIELD_H - 4) / FIELD_H) * height;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(mx, my, mw, mh, 12);
+  ctx.clip();
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(off, 0, 0, width, height);
+  ctx.restore();
 }
 
 function PitchLines() {
@@ -154,16 +164,6 @@ export function HeatmapBoard({
       <div className="heatmap-pitch">
         <PitchLines />
         <canvas ref={canvasRef} className="heatmap-pitch__layer" width={CANVAS_W} height={CANVAS_H} />
-        <svg
-          className="heatmap-pitch__layer"
-          viewBox={`0 0 ${FIELD_W} ${FIELD_H}`}
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          {points.map((point, index) => (
-            <circle key={index} cx={point.x} cy={point.y} r="0.8" fill="rgba(255,255,255,0.5)" />
-          ))}
-        </svg>
       </div>
 
       <div className="heatmap-legend">
