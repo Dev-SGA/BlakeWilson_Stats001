@@ -327,9 +327,9 @@ body::before {
 }
 
 .topic--defensive {
-  --topic-color: var(--sga-blue);
-  background: color-mix(in srgb, var(--sga-blue) 12%, var(--surface));
-  border-left-color: var(--sga-blue);
+  --topic-color: color-mix(in srgb, var(--sga-blue) 70%, var(--sga-navy));
+  background: color-mix(in srgb, var(--sga-blue) 9%, var(--surface));
+  border-left-color: color-mix(in srgb, var(--sga-blue) 70%, var(--sga-navy));
 }
 
 .topic--offensive {
@@ -361,7 +361,7 @@ body::before {
 }
 
 .topic--defensive .topic__phase {
-  color: var(--sga-blue);
+  color: color-mix(in srgb, var(--sga-blue) 80%, var(--sga-navy));
 }
 
 .topic--stats {
