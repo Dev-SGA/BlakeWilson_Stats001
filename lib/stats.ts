@@ -27,6 +27,11 @@ export type HeatPoint = {
   y: number;
 };
 
+/** Touches in the last third of the pitch (x from two thirds of the 120-wide field). */
+export function finalThirdCount(points: HeatPoint[]): number {
+  return points.filter((point) => point.x >= 80).length;
+}
+
 export type MatchKind = "baseline" | "session";
 
 export type MatchStats = {

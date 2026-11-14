@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { HeatPoint, MatchStats } from "@/lib/stats";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { finalThirdCount, type HeatPoint, type MatchStats } from "@/lib/stats";
 
 type HeatMode = "all" | "first" | "second";
 
-const FIELD_W = 120;
+export const FIELD_W = 120;
 const FIELD_H = 80;
 const CANVAS_W = 1200;
 const CANVAS_H = 800;
@@ -34,7 +34,7 @@ function rampColor(t: number): [number, number, number] {
   return STOPS[STOPS.length - 1].color;
 }
 
-function paintHeat(canvas: HTMLCanvasElement, points: HeatPoint[]) {
+export function paintHeat(canvas: HTMLCanvasElement, points: HeatPoint[]) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   const { width, height } = canvas;
@@ -94,7 +94,7 @@ function paintHeat(canvas: HTMLCanvasElement, points: HeatPoint[]) {
   ctx.restore();
 }
 
-function PitchLines() {
+export function PitchLines() {
   const line = "rgba(255,255,255,0.2)";
   const box = { fill: "none", stroke: line, strokeWidth: 0.7 } as const;
   return (
@@ -115,6 +115,22 @@ function PitchLines() {
       <rect x={FIELD_W - 8.5} y="29" width="6.5" height="22" {...box} />
       <circle cx={FIELD_W - 12.5} cy={FIELD_H / 2} r="1" fill={line} stroke="none" />
     </svg>
+  );
+}
+
+/** Pitch outline plus the heat layer, painted synchronously so PDF capture never sees an empty canvas. */
+export function HeatmapPitch({ points, className }: { points: HeatPoint[]; className?: string }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useLayoutEffect(() => {
+    if (canvasRef.current) paintHeat(canvasRef.current, points);
+  }, [points]);
+
+  return (
+    <div className={className}>
+      <PitchLines />
+      <canvas ref={canvasRef} className="heatmap-pitch__layer" width={CANVAS_W} height={CANVAS_H} />
+    </div>
   );
 }
 
@@ -146,7 +162,7 @@ export function HeatmapBoard({
     <div className="heatmap-card">
       <div className="heatmap-card__toolbar">
         <span className="heatmap-card__count">
-          {points.length} touches · {points.filter((point) => point.x >= (FIELD_W * 2) / 3).length} final third
+          {points.length} touches · {finalThirdCount(points)} final third
         </span>
         <div className="match-nav__pills" role="group" aria-label="Heatmap period">
           {modes.map((item) => (

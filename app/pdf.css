@@ -1685,3 +1685,394 @@
 .stats-pdf .spdf-possession-row {
   grid-template-columns: 128px minmax(0, 1fr) auto;
 }
+
+/* ---------- Blake Wilson 1v1 report ---------- */
+
+.bw-photo {
+  width: 268px;
+  height: 400px;
+  margin: 14px 0 0;
+  border-radius: 12px;
+  background-color: #0d3350;
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+}
+
+.bw-head__side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.bw-head__section {
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: #072334;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.bw-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 14px;
+  min-height: 0;
+  padding: 16px 0 12px;
+}
+
+.bw-grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.bw-stack {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 12px;
+  min-height: 0;
+}
+
+.bw-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 16px 14px;
+  border: 1px solid #d9e5ee;
+  border-top-width: 4px;
+  border-radius: 12px;
+  background: #f1f6fa;
+}
+
+.bw-card--off { border-top-color: #297cc1; }
+.bw-card--def { border-top-color: #1e5f94; }
+.bw-card--map { border-top-color: #072334; }
+.bw-card--nested { background: #ffffff; border-top-width: 3px; border-top-color: #7fb6e6; }
+.bw-card--fill { flex: 1 1 auto; justify-content: space-between; gap: 18px; padding: 22px 24px; }
+
+.bw-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bw-card__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #072334;
+}
+
+.bw-badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #dcebf8;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  color: #1e5f94;
+}
+
+.bw-kpi {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.bw-kpi__value {
+  font-size: 46px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #072334;
+}
+
+.bw-kpi__unit {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6b8192;
+}
+
+.bw-kpi__note {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b8192;
+}
+
+.bw-meter {
+  display: flex;
+  gap: 3px;
+  height: 14px;
+}
+
+.bw-meter__seg {
+  display: block;
+  height: 14px;
+  border-radius: 999px;
+}
+
+.bw-tone--green { background: #1f8a4c; }
+.bw-tone--amber { background: #e0a82e; }
+.bw-tone--grey { background: #c4cfd9; }
+.bw-tone--blue { background: #297cc1; }
+
+.bw-text--green { color: #17703c; }
+.bw-text--amber { color: #a97412; }
+.bw-text--grey { color: #5d7283; }
+.bw-text--blue { color: #1e5f94; }
+
+.bw-dot {
+  display: inline-block;
+  flex: 0 0 9px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+}
+
+.bw-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bw-legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #28465a;
+}
+
+.bw-legend__label { flex: 1 1 auto; }
+.bw-legend strong { font-size: 15px; font-weight: 800; }
+
+.bw-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bw-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 12px;
+  border: 1px solid #e0e9f0;
+  border-radius: 9px;
+  background: #ffffff;
+}
+
+.bw-card--nested .bw-tile { background: #f4f8fb; }
+
+.bw-tile__value {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.bw-tile__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #28465a;
+}
+
+.bw-tile__pct {
+  font-size: 11px;
+  font-weight: 700;
+  color: #7d909f;
+}
+
+.bw-band {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.bw-band strong { font-size: 14px; letter-spacing: 0.04em; }
+.bw-band--off { background: #297cc1; }
+.bw-band--def { background: #1e5f94; }
+
+.bw-children {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 14px;
+  padding-left: 18px;
+  border-left: 3px solid #7fb6e6;
+}
+
+.bw-children__caption {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6b8192;
+}
+
+.bw-children__row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.bw-maps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.bw-map {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  min-width: 0;
+}
+
+.bw-pitch {
+  position: relative;
+  width: 100%;
+  height: 168px;
+  border-radius: 8px;
+  background: #0a2a40;
+  overflow: hidden;
+}
+
+.bw-map__caption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b8192;
+}
+
+.bw-map__caption strong {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #072334;
+}
+
+.bw-defense {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+}
+
+.bw-defense__figures {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 14px;
+  min-width: 0;
+}
+
+.bw-ring {
+  position: relative;
+  flex: 0 0 150px;
+  width: 150px;
+  height: 150px;
+}
+
+.bw-ring svg { display: block; }
+
+.bw-ring__center {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 150px;
+  height: 150px;
+}
+
+.bw-ring__value {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+  color: #072334;
+}
+
+.bw-ring__label {
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6b8192;
+}
+
+/* layout refinements */
+
+.bw-body { overflow: hidden; }
+
+.bw-card--map { flex: 1 1 auto; }
+.bw-card--map .bw-maps { flex: 1 1 auto; align-content: center; }
+.bw-pitch { height: 176px; }
+
+.bw-card--compact { gap: 8px; padding: 10px 14px 12px; }
+.bw-card--compact .bw-card__head { min-height: 38px; }
+.bw-kpi--inline { gap: 8px; align-items: center; }
+.bw-kpi--inline .bw-kpi__value { font-size: 34px; }
+.bw-card--nested.bw-card--compact .bw-kpi__value { font-size: 30px; }
+.bw-card--compact .bw-tile { gap: 2px; padding: 6px 10px; }
+.bw-card--compact .bw-tile__value { font-size: 22px; }
+.bw-card--compact .bw-tile__label { font-size: 12px; white-space: nowrap; }
+.bw-card--nested.bw-card--compact { gap: 7px; }
+
+.bw-card--fill { justify-content: center; gap: 30px; }
+.bw-card--fill .bw-ring,
+.bw-card--fill .bw-ring svg,
+.bw-card--fill .bw-ring__center { width: 200px; height: 200px; flex-basis: 200px; }
+.bw-card--fill .bw-ring__value { font-size: 48px; }
+.bw-card--fill .bw-kpi__value { font-size: 64px; }
+.bw-card--fill .bw-meter, .bw-card--fill .bw-meter__seg { height: 18px; }
+.bw-card--fill .bw-legend li { font-size: 15px; }
+.bw-card--fill .bw-legend strong { font-size: 17px; }
+.bw-card--fill .bw-tile { padding: 14px 18px; }
+.bw-card--fill .bw-tile__value { font-size: 40px; }
+.bw-card--fill .bw-tile__label { font-size: 14px; }
+.bw-card--fill .bw-tile__pct { font-size: 13px; }
+
+.bw-card__titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bw-card__sub { font-size: 11px; font-weight: 700; color: #1e5f94; }
+.bw-card--nested.bw-card--compact .bw-card__title { font-size: 12px; letter-spacing: 0.08em; }
+.bw-card--nested.bw-card--compact .bw-card__head { min-height: 36px; }
+.bw-children { gap: 6px; }
+.bw-card--fill .bw-defense__figures { gap: 18px; }
+.bw-card--fill .bw-tile { align-items: flex-start; }

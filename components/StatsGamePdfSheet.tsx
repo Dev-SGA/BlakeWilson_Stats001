@@ -1,6 +1,8 @@
+import { HeatmapPitch } from "@/components/HeatmapBoard";
 import { BRAND } from "@/lib/brand";
 import {
   clipRef,
+  finalThirdCount,
   formatCount,
   matchSummary,
   perGame,
@@ -18,7 +20,15 @@ type StatsGamePdfSheetProps = {
   opponentLogoUrl: string;
 };
 
-type PrintTone = "green" | "yellow" | "blue" | "mint" | "grey" | "warn";
+type Tone = "green" | "amber" | "grey" | "blue";
+
+type Segment = { label: string; short?: string; value: number; tone: Tone; clip?: ClipRef };
+
+const TOTAL_PAGES = 3;
+
+function pct(value: number, total: number): number {
+  return total > 0 ? Math.round((value / total) * 100) : 0;
+}
 
 function PdfPlay({ clip }: { clip?: ClipRef }) {
   if (!clip?.hasClip) return null;
@@ -32,10 +42,6 @@ function PdfPlay({ clip }: { clip?: ClipRef }) {
       {icon}
     </a>
   );
-}
-
-function pct(value: number, total: number): number {
-  return total > 0 ? Math.round((value / total) * 100) : 0;
 }
 
 function PdfSide({
@@ -55,8 +61,7 @@ function PdfSide({
     <aside className="spdf-side">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={logoUrl} alt="" className="spdf-side__logo" />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={photoUrl} alt="" className="spdf-side__photo" />
+      <div className="bw-photo" data-pdf-bg={photoUrl} style={{ backgroundImage: `url("${photoUrl}")` }} />
       <div className="spdf-side__identity">
         <p className="spdf-side__label">Athlete</p>
         <h2 className="spdf-side__name">{name}</h2>
@@ -73,14 +78,25 @@ function PdfSide({
   );
 }
 
-function PdfHeader({ title, subtitle, opponentLogoUrl }: { title: string; subtitle: string; opponentLogoUrl: string }) {
+function PdfHeader({
+  title,
+  section,
+  subtitle,
+  opponentLogoUrl,
+}: {
+  title: string;
+  section: string;
+  subtitle: string;
+  opponentLogoUrl: string;
+}) {
   return (
     <header className="spdf-head">
       <div>
         <p className="spdf-head__eyebrow">{BRAND.legal}</p>
         <h1 className="spdf-head__title">{title}</h1>
       </div>
-      <div className="spdf-head__meta">
+      <div className="bw-head__side">
+        <span className="bw-head__section">{section}</span>
         <span className="spdf-head__match">
           {opponentLogoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -93,206 +109,206 @@ function PdfHeader({ title, subtitle, opponentLogoUrl }: { title: string; subtit
   );
 }
 
-function SummaryMeter({
-  segments,
-}: {
-  segments: { label: string; value: string; share: number; tone: PrintTone; clip?: ClipRef }[];
-}) {
-  const total = segments.reduce((sum, segment) => sum + segment.share, 0);
-
+function PdfFoot({ stats, page }: { stats: GameStats; page: number }) {
   return (
-    <div className="spdf-summary-meter">
-      <div className="spdf-pressure__track">
-        {total === 0 ? (
-          <span className="spdf-pressure__seg spdf-pressure__seg--grey" style={{ width: "100%" }} />
-        ) : (
-          segments.map((segment) => (
-            <span
-              key={segment.label}
-              className={`spdf-pressure__seg spdf-pressure__seg--${segment.tone}`}
-              style={{ width: `${(segment.share / total) * 100}%` }}
-            />
+    <footer className="spdf-foot">
+      <span>{BRAND.name}</span>
+      <span>
+        {stats.player.name} · {stats.meta.subtitle} · {page}/{TOTAL_PAGES}
+      </span>
+    </footer>
+  );
+}
+
+function Meter({ segments }: { segments: Segment[] }) {
+  const total = segments.reduce((sum, segment) => sum + segment.value, 0);
+  return (
+    <div className="bw-meter">
+      {total === 0 ? (
+        <span className="bw-meter__seg bw-tone--grey" style={{ width: "100%" }} />
+      ) : (
+        segments
+          .filter((segment) => segment.value > 0)
+          .map((segment) => (
+            <span key={segment.label} className={`bw-meter__seg bw-tone--${segment.tone}`} style={{ width: `${(segment.value / total) * 100}%` }} />
           ))
-        )}
-      </div>
-      <ul className="spdf-pressure__legend">
+      )}
+    </div>
+  );
+}
+
+function Legend({ segments, layout }: { segments: Segment[]; layout: "list" | "tiles" }) {
+  const total = segments.reduce((sum, segment) => sum + segment.value, 0);
+
+  if (layout === "tiles") {
+    return (
+      <ul className="bw-tiles">
         {segments.map((segment) => (
-          <li key={segment.label}>
-            <span className={`spdf-pressure__dot spdf-pressure__dot--${segment.tone}`} />
-            <span>
-              {segment.label}
+          <li key={segment.label} className="bw-tile">
+            <span className={`bw-tile__value bw-text--${segment.tone}`}>{formatCount(segment.value)}</span>
+            <span className="bw-tile__label">
+              <span className={`bw-dot bw-tone--${segment.tone}`} />
+              {segment.short ?? segment.label}
               <PdfPlay clip={segment.clip} />
             </span>
-            <strong className={`spdf-tone spdf-tone--${segment.tone}`}>{segment.value}</strong>
+            <span className="bw-tile__pct">{pct(segment.value, total)}%</span>
           </li>
         ))}
       </ul>
-    </div>
+    );
+  }
+
+  return (
+    <ul className="bw-legend">
+      {segments.map((segment) => (
+        <li key={segment.label}>
+          <span className={`bw-dot bw-tone--${segment.tone}`} />
+          <span className="bw-legend__label">
+            {segment.label}
+            <PdfPlay clip={segment.clip} />
+          </span>
+          <strong className={`bw-text--${segment.tone}`}>
+            {formatCount(segment.value)} · {pct(segment.value, total)}%
+          </strong>
+        </li>
+      ))}
+    </ul>
   );
 }
 
-function SummaryStatCard({
-  title,
-  total,
-  totalLabel,
-  rate,
-  rateLabel,
-  perGameLabel,
-  segments,
-}: {
+type CardProps = {
   title: string;
   total: number;
-  totalLabel: string;
-  rate?: number;
-  rateLabel?: string;
-  perGameLabel?: string;
-  segments: { label: string; value: string; share: number; tone: PrintTone; clip?: ClipRef }[];
-}) {
-  return (
-    <section className="spdf-section spdf-section--build-up spdf-section--summary">
-      <h3 className="spdf-section__title">{title}</h3>
-      <div className={`spdf-summary-kpis${rate == null ? " spdf-summary-kpis--single" : ""}`}>
-        <div className="spdf-summary-kpi">
-          <span className="spdf-summary-kpi__value">{formatCount(total)}</span>
-          <span className="spdf-summary-kpi__label">{totalLabel}</span>
-          {perGameLabel ? <span className="spdf-summary-kpi__per">{perGameLabel}</span> : null}
-        </div>
-        {rate != null ? (
-          <div className="spdf-summary-kpi spdf-summary-kpi--rate">
-            <span className="spdf-summary-kpi__value">{rate}%</span>
-            <span className="spdf-summary-kpi__label">{rateLabel}</span>
-          </div>
-        ) : null}
-      </div>
-      <SummaryMeter segments={segments} />
-    </section>
-  );
-}
-
-function playSegments(breakdown: PlayBreakdown, videos?: GameStats["videos"]) {
-  return [
-    {
-      label: "Progressive Plays",
-      value: `${formatCount(breakdown.progressivePlays)} · ${pct(breakdown.progressivePlays, breakdown.progressivePlays + breakdown.lostPlays + breakdown.neutralPlays)}%`,
-      share: breakdown.progressivePlays,
-      tone: "green" as PrintTone,
-      clip: clipRef(videos, "Progressive Plays"),
-    },
-    {
-      label: "Lost Plays",
-      value: `${formatCount(breakdown.lostPlays)} · ${pct(breakdown.lostPlays, breakdown.progressivePlays + breakdown.lostPlays + breakdown.neutralPlays)}%`,
-      share: breakdown.lostPlays,
-      tone: "yellow" as PrintTone,
-      clip: clipRef(videos, "Lost Plays"),
-    },
-    {
-      label: "Neutral Plays",
-      value: `${formatCount(breakdown.neutralPlays)} · ${pct(breakdown.neutralPlays, breakdown.progressivePlays + breakdown.lostPlays + breakdown.neutralPlays)}%`,
-      share: breakdown.neutralPlays,
-      tone: "grey" as PrintTone,
-    },
-  ];
-}
-
-function duelSegments(breakdown: DuelBreakdown, videos?: GameStats["videos"]) {
-  const total = breakdown.won + breakdown.lost + breakdown.neutral;
-  return [
-    {
-      label: "Won",
-      value: `${formatCount(breakdown.won)} · ${pct(breakdown.won, total)}%`,
-      share: breakdown.won,
-      tone: "green" as PrintTone,
-      clip: clipRef(videos, "Def. 1v1 Won", "Defensive 1v1 Won"),
-    },
-    {
-      label: "Lost",
-      value: `${formatCount(breakdown.lost)} · ${pct(breakdown.lost, total)}%`,
-      share: breakdown.lost,
-      tone: "yellow" as PrintTone,
-      clip: clipRef(videos, "Def. 1v1 Lost", "Defensive 1v1 Lost"),
-    },
-    {
-      label: "Neutral",
-      value: `${formatCount(breakdown.neutral)} · ${pct(breakdown.neutral, total)}%`,
-      share: breakdown.neutral,
-      tone: "grey" as PrintTone,
-    },
-  ];
-}
-
-function PdfSection({
-  title,
-  kpi,
-  unit,
-  aside,
-  children,
-  footer,
-  size = "md",
-  className,
-  panelOnly,
-}: {
-  title: string;
-  kpi: number;
   unit: string;
-  aside?: string;
-  children: React.ReactNode;
-  footer?: React.ReactNode;
-  size?: "md" | "lg";
-  className?: string;
-  panelOnly?: boolean;
-}) {
+  accent: "off" | "def";
+  segments: Segment[];
+  badge?: string;
+  note?: string;
+  layout?: "list" | "tiles";
+  nested?: boolean;
+  compact?: boolean;
+  children?: React.ReactNode;
+};
+
+function OutcomeCard({ title, total, unit, accent, segments, badge, note, layout = "list", nested = false, compact = false, children }: CardProps) {
   return (
-    <section
-      className={`spdf-section spdf-section--build-up spdf-section--${size}${panelOnly ? " spdf-section--panel-only" : ""}${className ? ` ${className}` : ""}`}
-    >
-      <div className="spdf-section__top">
-        <p className="spdf-section__phase">1v1 Report</p>
-        <h3 className="spdf-section__title">{title}</h3>
-      </div>
-      <div className="spdf-section__content">
-        {panelOnly ? null : (
-          <div className={`spdf-section__kpi${aside ? " spdf-section__kpi--aside" : ""}`}>
-            <span className="spdf-section__value">{formatCount(kpi)}</span>
-            {aside ? <span className="spdf-section__aside">{aside}</span> : null}
-            <span className="spdf-section__unit">{unit}</span>
+    <section className={`bw-card bw-card--${accent}${nested ? " bw-card--nested" : ""}${compact ? " bw-card--compact" : ""}`}>
+      {compact ? (
+        <div className="bw-card__head">
+          <div className="bw-card__titles">
+            <h3 className="bw-card__title">{title}</h3>
+            {nested && badge ? <span className="bw-card__sub">{badge}</span> : null}
           </div>
-        )}
-        <div className="spdf-section__panel">{children}</div>
-      </div>
-      {footer ? <div className="spdf-section__footer">{footer}</div> : null}
+          <div className="bw-kpi bw-kpi--inline">
+            {!nested && badge ? <span className="bw-badge">{badge}</span> : null}
+            <span className="bw-kpi__value">{formatCount(total)}</span>
+            <span className="bw-kpi__unit">{unit}</span>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="bw-card__head">
+            <h3 className="bw-card__title">{title}</h3>
+            {badge ? <span className="bw-badge">{badge}</span> : null}
+          </div>
+          <div className="bw-kpi">
+            <span className="bw-kpi__value">{formatCount(total)}</span>
+            <span className="bw-kpi__unit">{unit}</span>
+            {note ? <span className="bw-kpi__note">{note}</span> : null}
+          </div>
+        </>
+      )}
+      {children}
+      <Meter segments={segments} />
+      <Legend segments={segments} layout={layout} />
     </section>
   );
 }
 
-function MovePanel({
-  title,
-  total,
-  breakdown,
-  videos,
-}: {
-  title: string;
-  total: number;
-  breakdown: PlayBreakdown;
-  videos?: GameStats["videos"];
-}) {
+function playSegments(breakdown: PlayBreakdown, videos?: GameStats["videos"]): Segment[] {
+  return [
+    { label: "Progressive Plays", short: "Progressive", value: breakdown.progressivePlays, tone: "green", clip: clipRef(videos, "Progressive Plays") },
+    { label: "Lost Plays", short: "Lost", value: breakdown.lostPlays, tone: "amber", clip: clipRef(videos, "Lost Plays") },
+    { label: "Neutral Plays", short: "Neutral", value: breakdown.neutralPlays, tone: "grey" },
+  ];
+}
+
+function duelSegments(breakdown: DuelBreakdown, videos?: GameStats["videos"]): Segment[] {
+  return [
+    { label: "Won", value: breakdown.won, tone: "green", clip: clipRef(videos, "Def. 1v1 Won", "Defensive 1v1 Won") },
+    { label: "Lost", value: breakdown.lost, tone: "amber", clip: clipRef(videos, "Def. 1v1 Lost", "Defensive 1v1 Lost") },
+    { label: "Neutral", value: breakdown.neutral, tone: "grey" },
+  ];
+}
+
+function perGameNote(value: number, games?: number): string | undefined {
+  return games ? `${perGame(value, games)} per game` : undefined;
+}
+
+function WonRing({ won, lost }: { won: number; lost: number }) {
+  const rate = pct(won, won + lost);
+  const radius = 54;
+  const circumference = 2 * Math.PI * radius;
+  const filled = (rate / 100) * circumference;
+
   return (
-    <div className="spdf-pass-panel">
-      <div className="spdf-pass-panel__head">
-        <p className="spdf-pass-panel__title">{title}</p>
-        <span className="spdf-pass-panel__total">{formatCount(total)} plays</span>
+    <div className="bw-ring">
+      <svg width="150" height="150" viewBox="0 0 150 150" aria-hidden="true">
+        <circle cx="75" cy="75" r={radius} fill="none" stroke="#e0a82e" strokeWidth="16" />
+        <circle
+          cx="75"
+          cy="75"
+          r={radius}
+          fill="none"
+          stroke="#1f8a4c"
+          strokeWidth="16"
+          strokeDasharray={`${filled} ${circumference - filled}`}
+          transform="rotate(-90 75 75)"
+        />
+      </svg>
+      <div className="bw-ring__center">
+        <span className="bw-ring__value">{rate}%</span>
+        <span className="bw-ring__label">Won rate</span>
       </div>
-      <SummaryMeter segments={playSegments(breakdown, videos)} />
     </div>
   );
 }
 
-function SummaryPdfPage({
-  stats,
-  photoUrl,
-  logoUrl,
-  clubLogoUrl,
-  opponentLogoUrl,
-}: StatsGamePdfSheetProps) {
+function HeatmapCard({ heatmap }: { heatmap: GameStats["heatmap"] }) {
+  const all = [...heatmap.firstHalf, ...heatmap.secondHalf];
+  const periods = [
+    { label: "All", points: all },
+    { label: "1T", points: heatmap.firstHalf },
+    { label: "2T", points: heatmap.secondHalf },
+  ];
+
+  return (
+    <section className="bw-card bw-card--map">
+      <div className="bw-card__head">
+        <h3 className="bw-card__title">Heatmap</h3>
+        <span className="bw-badge">
+          {all.length} touches · {finalThirdCount(all)} final third
+        </span>
+      </div>
+      <div className="bw-maps">
+        {periods.map((period) => (
+          <figure key={period.label} className="bw-map">
+            <HeatmapPitch points={period.points} className="bw-pitch" />
+            <figcaption className="bw-map__caption">
+              <strong>{period.label}</strong>
+              <span>
+                {period.points.length} touches · {finalThirdCount(period.points)} final third
+              </span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SummaryPage(props: StatsGamePdfSheetProps) {
+  const { stats } = props;
   const summary = matchSummary({
     id: stats.meta.fileSlug,
     kind: "session",
@@ -311,144 +327,161 @@ function SummaryPdfPage({
 
   return (
     <article className="stats-pdf" aria-hidden="true">
-      <PdfSide
-        photoUrl={photoUrl}
-        logoUrl={logoUrl}
-        clubLogoUrl={clubLogoUrl}
-        name={stats.player.name}
-        club={stats.player.club}
-      />
-      <div className="spdf-main spdf-main--stats">
-        <PdfHeader title={stats.meta.title} subtitle={stats.meta.subtitle} opponentLogoUrl={opponentLogoUrl} />
-        <div className="spdf-summary">
-          <SummaryStatCard
-            title="Touches"
-            total={summary.touches}
-            totalLabel="Total touches"
-            rate={summary.offensive1v1Share}
-            rateLabel="Offensive 1v1"
-            perGameLabel={games ? `${perGame(summary.touches, games)} per game` : undefined}
-            segments={[
-              {
-                label: "Offensive 1v1",
-                value: formatCount(summary.offensive1v1),
-                share: summary.offensive1v1,
-                tone: "blue",
-              },
-              {
-                label: "Other touches",
-                value: formatCount(summary.otherTouches),
-                share: summary.otherTouches,
-                tone: "grey",
-              },
-            ]}
-          />
-          <SummaryStatCard
-            title="Offensive 1v1"
-            total={summary.offensive1v1}
-            totalLabel="Offensive 1v1"
-            perGameLabel={games ? `${perGame(summary.offensive1v1, games)} per game` : undefined}
-            segments={playSegments(
-              {
-                progressivePlays: summary.offensiveProgressive,
-                lostPlays: summary.offensiveLost,
-                neutralPlays: summary.offensiveNeutral,
-              },
-              stats.videos,
-            )}
-          />
-          <SummaryStatCard
-            title="Defensive 1v1"
-            total={summary.defensive1v1}
-            totalLabel="Defensive 1v1"
-            rate={summary.defensiveWinRate}
-            rateLabel="Won rate"
-            perGameLabel={games ? `${perGame(summary.defensive1v1, games)} per game` : undefined}
-            segments={duelSegments(
-              {
-                won: summary.defensiveWon,
-                lost: summary.defensiveLost,
-                neutral: summary.defensiveNeutral,
-              },
-              stats.videos,
-            )}
-          />
+      <PdfSide photoUrl={props.photoUrl} logoUrl={props.logoUrl} clubLogoUrl={props.clubLogoUrl} name={stats.player.name} club={stats.player.club} />
+      <div className="spdf-main">
+        <PdfHeader title={stats.meta.title} section="Summary" subtitle={stats.meta.subtitle} opponentLogoUrl={props.opponentLogoUrl} />
+        <div className="bw-body">
+          <div className="bw-grid3">
+            <OutcomeCard
+              title="Touches"
+              total={summary.touches}
+              unit="touches"
+              accent="off"
+              badge={`${summary.offensive1v1Share}% Offensive 1v1`}
+              note={perGameNote(summary.touches, games)}
+              segments={[
+                { label: "Offensive 1v1", value: summary.offensive1v1, tone: "blue" },
+                { label: "Other touches", value: summary.otherTouches, tone: "grey" },
+              ]}
+            />
+            <OutcomeCard
+              title="Offensive 1v1"
+              total={summary.offensive1v1}
+              unit="plays"
+              accent="off"
+              note={perGameNote(summary.offensive1v1, games)}
+              segments={playSegments(
+                {
+                  progressivePlays: summary.offensiveProgressive,
+                  lostPlays: summary.offensiveLost,
+                  neutralPlays: summary.offensiveNeutral,
+                },
+                stats.videos,
+              )}
+            />
+            <OutcomeCard
+              title="Defensive 1v1"
+              total={summary.defensive1v1}
+              unit="duels"
+              accent="def"
+              badge={`${summary.defensiveWinRate}% won`}
+              note={perGameNote(summary.defensive1v1, games)}
+              segments={duelSegments(
+                { won: summary.defensiveWon, lost: summary.defensiveLost, neutral: summary.defensiveNeutral },
+                stats.videos,
+              )}
+            />
+          </div>
+          <HeatmapCard heatmap={stats.heatmap} />
         </div>
-        <footer className="spdf-foot">
-          <span>{BRAND.name}</span>
-          <span>
-            {stats.player.name} · {stats.meta.subtitle}
-          </span>
-        </footer>
+        <PdfFoot stats={stats} page={1} />
       </div>
     </article>
   );
 }
 
-export function StatsGamePdfSheet({ stats, photoUrl, logoUrl, clubLogoUrl, opponentLogoUrl }: StatsGamePdfSheetProps) {
-  const { player, meta, facing1v1, back1v1, defensive1v1 } = stats;
+function OffensivePage(props: StatsGamePdfSheetProps) {
+  const { stats } = props;
+  const { facing1v1, back1v1, offensive1v1 } = stats;
+  const games = stats.meta.games;
 
   return (
-    <>
-      <SummaryPdfPage
-        stats={stats}
-        photoUrl={photoUrl}
-        logoUrl={logoUrl}
-        clubLogoUrl={clubLogoUrl}
-        opponentLogoUrl={opponentLogoUrl}
-      />
-      <article className="stats-pdf stats-pdf--page1" aria-hidden="true">
-        <PdfSide photoUrl={photoUrl} logoUrl={logoUrl} clubLogoUrl={clubLogoUrl} name={player.name} club={player.club} />
-
-        <div className="spdf-main">
-          <PdfHeader title={meta.title} subtitle={meta.subtitle} opponentLogoUrl={opponentLogoUrl} />
-
-          <div className="spdf-stack">
-            <PdfSection title="Facing 1v1" kpi={facing1v1.total} unit="Total" size="lg" panelOnly>
-              <div className="spdf-pass-results-app">
-                <MovePanel
-                  title="Facing 1v1"
-                  total={facing1v1.total}
-                  breakdown={facing1v1}
-                  videos={stats.videos}
-                />
-                <div className="spdf-pass-results-app__pair">
-                  {facing1v1.classes.map((move) => (
-                    <MovePanel
-                      key={move.id}
-                      title={move.label}
-                      total={move.total}
-                      breakdown={move}
-                      videos={stats.videos}
-                    />
-                  ))}
-                </div>
+    <article className="stats-pdf" aria-hidden="true">
+      <PdfSide photoUrl={props.photoUrl} logoUrl={props.logoUrl} clubLogoUrl={props.clubLogoUrl} name={stats.player.name} club={stats.player.club} />
+      <div className="spdf-main">
+        <PdfHeader title={stats.meta.title} section="Offensive 1v1" subtitle={stats.meta.subtitle} opponentLogoUrl={props.opponentLogoUrl} />
+        <div className="bw-body">
+          <div className="bw-stack">
+            <OutcomeCard
+              title="Facing 1v1"
+              total={facing1v1.total}
+              unit="plays"
+              accent="off"
+              compact
+              layout="tiles"
+              badge={`${pct(facing1v1.total, offensive1v1.total)}% of Off. 1v1`}
+              note={perGameNote(facing1v1.total, games)}
+              segments={playSegments(facing1v1, stats.videos)}
+            />
+            <div className="bw-children">
+              <p className="bw-children__caption">Facing 1v1 classes</p>
+              <div className="bw-children__row">
+                {facing1v1.classes.map((item) => (
+                  <OutcomeCard
+                    key={item.id}
+                    nested
+                    compact
+                    title={item.label}
+                    total={item.total}
+                    unit="plays"
+                    accent="off"
+                    layout="tiles"
+                    badge={`${pct(item.total, facing1v1.total)}% of Facing`}
+                    segments={playSegments(item, stats.videos)}
+                  />
+                ))}
               </div>
-            </PdfSection>
-
-            <PdfSection title="Back 1v1" kpi={back1v1.total} unit="Total">
-              <MovePanel title="Back 1v1" total={back1v1.total} breakdown={back1v1} videos={stats.videos} />
-            </PdfSection>
-
-            <PdfSection title="Defensive 1v1" kpi={defensive1v1.total} unit="Total">
-              <div className="spdf-pass-panel">
-                <div className="spdf-pass-panel__head">
-                  <p className="spdf-pass-panel__title">Defensive 1v1</p>
-                  <span className="spdf-pass-panel__total">{formatCount(defensive1v1.total)} duels</span>
-                </div>
-                <SummaryMeter segments={duelSegments(defensive1v1, stats.videos)} />
-              </div>
-            </PdfSection>
+            </div>
+            <OutcomeCard
+              title="Back 1v1"
+              total={back1v1.total}
+              unit="plays"
+              accent="off"
+              compact
+              layout="tiles"
+              badge={`${pct(back1v1.total, offensive1v1.total)}% of Off. 1v1`}
+              note={perGameNote(back1v1.total, games)}
+              segments={playSegments(back1v1, stats.videos)}
+            />
           </div>
-
-          <footer className="spdf-foot">
-            <span>{BRAND.name}</span>
-            <span>
-              {player.name} · {meta.subtitle}
-            </span>
-          </footer>
         </div>
-      </article>
+        <PdfFoot stats={stats} page={2} />
+      </div>
+    </article>
+  );
+}
+
+function DefensivePage(props: StatsGamePdfSheetProps) {
+  const { stats } = props;
+  const { defensive1v1 } = stats;
+  const segments = duelSegments(defensive1v1, stats.videos);
+  const games = stats.meta.games;
+
+  return (
+    <article className="stats-pdf" aria-hidden="true">
+      <PdfSide photoUrl={props.photoUrl} logoUrl={props.logoUrl} clubLogoUrl={props.clubLogoUrl} name={stats.player.name} club={stats.player.club} />
+      <div className="spdf-main">
+        <PdfHeader title={stats.meta.title} section="Defensive 1v1" subtitle={stats.meta.subtitle} opponentLogoUrl={props.opponentLogoUrl} />
+        <div className="bw-body">
+          <section className="bw-card bw-card--def bw-card--fill">
+            <div className="bw-defense">
+              <WonRing won={defensive1v1.won} lost={defensive1v1.lost} />
+              <div className="bw-defense__figures">
+                <div className="bw-kpi">
+                  <span className="bw-kpi__value">{formatCount(defensive1v1.total)}</span>
+                  <span className="bw-kpi__unit">duels</span>
+                  {perGameNote(defensive1v1.total, games) ? (
+                    <span className="bw-kpi__note">{perGameNote(defensive1v1.total, games)}</span>
+                  ) : null}
+                </div>
+                <Meter segments={segments} />
+              </div>
+            </div>
+            <Legend segments={segments} layout="tiles" />
+          </section>
+        </div>
+        <PdfFoot stats={stats} page={3} />
+      </div>
+    </article>
+  );
+}
+
+export function StatsGamePdfSheet(props: StatsGamePdfSheetProps) {
+  return (
+    <>
+      <SummaryPage {...props} />
+      <OffensivePage {...props} />
+      <DefensivePage {...props} />
     </>
   );
 }
