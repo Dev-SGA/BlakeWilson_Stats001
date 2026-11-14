@@ -6,17 +6,17 @@
   },
   "player": {
     "name": "Blake Wilson",
-    "club": "SGA",
-    "clubLogo": "",
+    "club": "St. Louis City SC",
+    "clubLogo": "/clubs/st-louis-city.png",
     "photo": "/player/blake-wilson.png"
   },
   "matches": [
     {
-      "id": "session-001",
+      "id": "minnesota-united",
       "kind": "session",
-      "label": "Session 001",
-      "shortLabel": "Session 001",
-      "logo": "",
+      "label": "vs Minnesota United FC",
+      "shortLabel": "Minnesota United",
+      "logo": "/clubs/minnesota-united.png",
       "touches": {
         "total": 31,
         "videoLink": ""
