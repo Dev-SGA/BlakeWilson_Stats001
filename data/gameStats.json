@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "title": "Stats Game Report",
+    "subtitle": "Individual match statistics",
+    "session": "001"
+  },
+  "player": {
+    "name": "Blake Wilson",
+    "club": "SGA",
+    "clubLogo": "",
+    "photo": "/player/blake-wilson.png"
+  },
+  "matches": [
+    {
+      "id": "session-001",
+      "kind": "session",
+      "label": "Session 001",
+      "shortLabel": "Session 001",
+      "logo": "",
+      "touches": {
+        "total": 32,
+        "videoLink": ""
+      },
+      "offensive1v1": {
+        "total": 16,
+        "progressivePlays": 7,
+        "lostPlays": 3,
+        "neutralPlays": 6,
+        "videoLink": ""
+      },
+      "defensive1v1": {
+        "total": 17,
+        "won": 8,
+        "lost": 5,
+        "neutral": 4,
+        "videoLink": ""
+      },
+      "facing1v1": {
+        "total": 16,
+        "moves": [
+          {
+            "id": "facing",
+            "label": "Facing 1v1",
+            "total": 10,
+            "progressivePlays": 5,
+            "lostPlays": 2,
+            "neutralPlays": 3
+          },
+          {
+            "id": "get-away",
+            "label": "Get Away from Opposition",
+            "total": 8,
+            "progressivePlays": 4,
+            "lostPlays": 1,
+            "neutralPlays": 3
+          },
+          {
+            "id": "dribble",
+            "label": "Dribble Opponent",
+            "total": 2,
+            "progressivePlays": 1,
+            "lostPlays": 1,
+            "neutralPlays": 0
+          }
+        ],
+        "videoLink": ""
+      },
+      "back1v1": {
+        "total": 6,
+        "progressivePlays": 2,
+        "lostPlays": 1,
+        "neutralPlays": 3,
+        "videoLink": ""
+      },
+      "videos": []
+    }
+  ]
+}
