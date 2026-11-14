@@ -253,8 +253,8 @@ function perGameNote(value: number, games?: number): string | undefined {
   return games ? `${perGame(value, games)} per game` : undefined;
 }
 
-function WonRing({ won, lost }: { won: number; lost: number }) {
-  const rate = pct(won, won + lost);
+function WonRing({ won, total }: { won: number; total: number }) {
+  const rate = pct(won, total);
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
   const filled = (rate / 100) * circumference;
@@ -462,7 +462,7 @@ function DefensivePage(props: StatsGamePdfSheetProps) {
         <div className="bw-body">
           <section className="bw-card bw-card--def bw-card--fill">
             <div className="bw-defense">
-              <WonRing won={defensive1v1.won} lost={defensive1v1.lost} />
+              <WonRing won={defensive1v1.won} total={defensive1v1.total} />
               <div className="bw-defense__figures">
                 <div className="bw-kpi">
                   <span className="bw-kpi__value">{formatCount(defensive1v1.total)}</span>

@@ -193,7 +193,7 @@ export function matchSummary(match: MatchStats): MatchSummary {
     defensiveWon: match.defensive1v1.won,
     defensiveLost: match.defensive1v1.lost,
     defensiveNeutral: match.defensive1v1.neutral,
-    defensiveWinRate: rate(match.defensive1v1.won, match.defensive1v1.won + match.defensive1v1.lost),
+    defensiveWinRate: rate(match.defensive1v1.won, match.defensive1v1.total),
   };
 }
 
