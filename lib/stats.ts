@@ -27,7 +27,7 @@ export type HeatPoint = {
   y: number;
 };
 
-/** Touches in the last third of the pitch (x from two thirds of the 120-wide field). */
+/** Possessions in the last third of the pitch (x from two thirds of the 120-wide field). */
 export function finalThirdCount(points: HeatPoint[]): number {
   return points.filter((point) => point.x >= 80).length;
 }
@@ -40,7 +40,7 @@ export type MatchStats = {
   label: string;
   shortLabel: string;
   logo: string;
-  touches: {
+  possessions: {
     total: number;
     videoLink: string;
   };
@@ -96,7 +96,7 @@ export type GameStats = {
   meta: StatsReport["meta"] & { fileSlug: string; games?: number };
   player: StatsReport["player"];
   opponentLogo: string;
-  touches: MatchStats["touches"];
+  possessions: MatchStats["possessions"];
   offensive1v1: MatchStats["offensive1v1"];
   defensive1v1: MatchStats["defensive1v1"];
   facing1v1: MatchStats["facing1v1"];
@@ -110,11 +110,12 @@ export function getStatsReport(): StatsReport {
 }
 
 export type MatchSummary = {
-  touches: number;
+  possessions: number;
   offensive1v1: number;
-  /** Share of touches that were offensive 1v1 situations. */
+  /** Share of possessions that were offensive 1v1 situations. */
   offensive1v1Share: number;
-  otherTouches: number;
+  offensiveProgressiveShare: number;
+  otherPossessions: number;
   offensiveProgressive: number;
   offensiveLost: number;
   offensiveNeutral: number;
@@ -176,14 +177,15 @@ export function duelTotal(breakdown: DuelBreakdown): number {
 }
 
 export function matchSummary(match: MatchStats): MatchSummary {
-  const touches = match.touches.total;
+  const possessions = match.possessions.total;
   const offensive1v1 = match.offensive1v1.total;
 
   return {
-    touches,
+    possessions,
     offensive1v1,
-    offensive1v1Share: rate(offensive1v1, touches),
-    otherTouches: Math.max(touches - offensive1v1, 0),
+    offensive1v1Share: rate(offensive1v1, possessions),
+    otherPossessions: Math.max(possessions - offensive1v1, 0),
+    offensiveProgressiveShare: rate(match.offensive1v1.progressivePlays, offensive1v1),
     offensiveProgressive: match.offensive1v1.progressivePlays,
     offensiveLost: match.offensive1v1.lostPlays,
     offensiveNeutral: match.offensive1v1.neutralPlays,
@@ -238,8 +240,8 @@ export function seasonMatch(matches: MatchStats[]): MatchStats {
     label: "Season",
     shortLabel: "Season",
     logo: "",
-    touches: {
-      total: matches.reduce((sum, match) => sum + match.touches.total, 0),
+    possessions: {
+      total: matches.reduce((sum, match) => sum + match.possessions.total, 0),
       videoLink: "",
     },
     offensive1v1: {
@@ -297,7 +299,7 @@ export function projectedMatch(match: MatchStats, targetMinutes = 90): MatchStat
 
   return {
     ...match,
-    touches: scaleNumbers(match.touches, factor, true),
+    possessions: scaleNumbers(match.possessions, factor, true),
     offensive1v1: scaleNumbers(match.offensive1v1, factor, true),
     defensive1v1: scaleNumbers(match.defensive1v1, factor, true),
     facing1v1: scaleNumbers(match.facing1v1, factor, true),
@@ -314,7 +316,7 @@ export function perGameMatch(season: MatchStats): MatchStats {
   return {
     ...season,
     label: `${season.label} · Per game`,
-    touches: scaleNumbers(season.touches, factor),
+    possessions: scaleNumbers(season.possessions, factor),
     offensive1v1: scaleNumbers(season.offensive1v1, factor),
     defensive1v1: scaleNumbers(season.defensive1v1, factor),
     facing1v1: scaleNumbers(season.facing1v1, factor),
@@ -335,7 +337,7 @@ export function toGameStats(report: StatsReport, match: MatchStats): GameStats {
     },
     player: report.player,
     opponentLogo: match.logo,
-    touches: match.touches,
+    possessions: match.possessions,
     offensive1v1: match.offensive1v1,
     defensive1v1: match.defensive1v1,
     facing1v1: match.facing1v1,

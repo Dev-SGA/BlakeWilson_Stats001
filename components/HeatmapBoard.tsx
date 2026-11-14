@@ -154,15 +154,15 @@ export function HeatmapBoard({
 
   const modes: { id: HeatMode; label: string; count: number }[] = [
     { id: "all", label: "All", count: heatmap.firstHalf.length + heatmap.secondHalf.length },
-    { id: "first", label: "1T", count: heatmap.firstHalf.length },
-    { id: "second", label: "2T", count: heatmap.secondHalf.length },
+    { id: "first", label: "1st H", count: heatmap.firstHalf.length },
+    { id: "second", label: "2nd H", count: heatmap.secondHalf.length },
   ];
 
   return (
     <div className="heatmap-card">
       <div className="heatmap-card__toolbar">
         <span className="heatmap-card__count">
-          {points.length} touches · {finalThirdCount(points)} final third
+          {points.length} possessions · {finalThirdCount(points)} final third
         </span>
         <div className="match-nav__pills" role="group" aria-label="Heatmap period">
           {modes.map((item) => (

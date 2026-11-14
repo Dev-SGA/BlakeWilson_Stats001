@@ -138,7 +138,6 @@ function buildTopics(match: MatchStats): Topic[] {
       content: (
         <FacingBoard
           facing={match.facing1v1}
-          offensiveTotal={match.offensive1v1.total}
           games={games}
           videos={videos}
         />

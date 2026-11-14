@@ -36,6 +36,20 @@ function ClipLabel({ label, clip }: { label: string; clip?: ClipRef }) {
   );
 }
 
+function ClipIcon({ clip }: { clip?: ClipRef }) {
+  if (!clip?.hasClip) return null;
+  const icon = (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/brand/play-icon.png" alt="" className="play-icon" width={14} height={14} />
+  );
+  if (!clip.href) return <span className="clip-icon">{icon}</span>;
+  return (
+    <a className="clip-icon" href={clip.href} target="_blank" rel="noreferrer" aria-label="Open video clip">
+      {icon}
+    </a>
+  );
+}
+
 function ExploreBar({
   primary,
   secondary,
@@ -62,57 +76,6 @@ function ExploreBar({
           <span className={`stats-bar__seg stats-bar__seg--${secondaryTone}`} style={{ width: `${100 - primaryPct}%` }} />
         </>
       )}
-    </div>
-  );
-}
-
-function StatsSplit({
-  primary,
-  secondary,
-  primaryLabel,
-  secondaryLabel,
-  primaryTone,
-  secondaryTone,
-  primaryClip,
-  secondaryClip,
-  showShare = true,
-}: {
-  primary: number;
-  secondary: number;
-  primaryLabel: string;
-  secondaryLabel: string;
-  primaryTone: Tone;
-  secondaryTone: Tone;
-  primaryClip?: ClipRef;
-  secondaryClip?: ClipRef;
-  showShare?: boolean;
-}) {
-  const total = primary + secondary;
-  const primaryPct = percent(primary, total);
-  const secondaryPct = total > 0 ? 100 - primaryPct : 0;
-  const figure = (value: number, share: number) => (showShare ? `${formatCount(value)} · ${share}%` : formatCount(value));
-
-  return (
-    <div className="stats-viz">
-      <ExploreBar
-        primary={primary}
-        secondary={secondary}
-        primaryTone={primaryTone}
-        secondaryTone={secondaryTone}
-        label={`${primaryLabel} ${primary}. ${secondaryLabel} ${secondary}.`}
-      />
-      <ul className="stats-viz__legend">
-        <li>
-          <span className={`legend__dot legend__dot--${primaryTone}`} />
-          <ClipLabel label={primaryLabel} clip={primaryClip} />
-          <strong>{figure(primary, primaryPct)}</strong>
-        </li>
-        <li>
-          <span className={`legend__dot legend__dot--${secondaryTone}`} />
-          <ClipLabel label={secondaryLabel} clip={secondaryClip} />
-          <strong>{figure(secondary, secondaryPct)}</strong>
-        </li>
-      </ul>
     </div>
   );
 }
@@ -186,63 +149,6 @@ function StatsFigure({
   );
 }
 
-function StatsRateTopic({
-  title,
-  total,
-  totalLabel,
-  totalUnit,
-  games,
-  rate,
-  rateLabel,
-  primary,
-  secondary,
-  primaryLabel,
-  secondaryLabel,
-  primaryTone,
-  secondaryTone,
-  primaryClip,
-  secondaryClip,
-  showShare = true,
-}: {
-  title: string;
-  total: number;
-  totalLabel: string;
-  totalUnit: string;
-  games?: number;
-  rate: number;
-  rateLabel: string;
-  primary: number;
-  secondary: number;
-  primaryLabel: string;
-  secondaryLabel: string;
-  primaryTone: Tone;
-  secondaryTone: Tone;
-  primaryClip?: ClipRef;
-  secondaryClip?: ClipRef;
-  showShare?: boolean;
-}) {
-  return (
-    <section className="stats-topic">
-      <h3 className="stats-topic__title">{title}</h3>
-      <div className="stats-topic__panel">
-        <StatsFigure label={totalLabel} value={total} unit={totalUnit} games={games} />
-        <StatsFigure label={rateLabel} value={rate} rate />
-        <StatsSplit
-          primary={primary}
-          secondary={secondary}
-          primaryLabel={primaryLabel}
-          secondaryLabel={secondaryLabel}
-          primaryTone={primaryTone}
-          secondaryTone={secondaryTone}
-          primaryClip={primaryClip}
-          secondaryClip={secondaryClip}
-          showShare={showShare}
-        />
-      </div>
-    </section>
-  );
-}
-
 function StatsTriTopic({
   title,
   total,
@@ -252,6 +158,7 @@ function StatsTriTopic({
   rate,
   rateLabel,
   segments,
+  clip,
 }: {
   title: string;
   total: number;
@@ -261,10 +168,14 @@ function StatsTriTopic({
   rate?: number;
   rateLabel?: string;
   segments: TriSegment[];
+  clip?: ClipRef;
 }) {
   return (
     <section className="stats-topic">
-      <h3 className="stats-topic__title">{title}</h3>
+      <h3 className="stats-topic__title">
+        {title}
+        <ClipIcon clip={clip} />
+      </h3>
       <div className={`stats-topic__panel${rate == null ? " stats-topic__panel--pair" : ""}`}>
         <StatsFigure label={totalLabel} value={total} unit={totalUnit} games={games} />
         {rate != null ? <StatsFigure label={rateLabel ?? ""} value={rate} rate /> : null}
@@ -283,6 +194,7 @@ export function OutcomeMeter({
   games,
   unit,
   compact = false,
+  clip,
 }: {
   title: string;
   total: number;
@@ -291,10 +203,14 @@ export function OutcomeMeter({
   games?: number;
   unit?: string;
   compact?: boolean;
+  clip?: ClipRef;
 }) {
   return (
     <div className={`metric-card${compact ? " metric-card--sub" : ""}`}>
-      <h3 className="metric-card__title">{title}</h3>
+      <h3 className="metric-card__title">
+        {title}
+        <ClipIcon clip={clip} />
+      </h3>
       {games && unit ? (
         <CountLine value={total} unit={unit} games={games} />
       ) : (
@@ -309,21 +225,27 @@ export function OutcomeMeter({
   );
 }
 
-function playSegments(breakdown: PlayBreakdown, videos?: MatchStats["videos"]): TriSegment[] {
+function playSegments(breakdown: PlayBreakdown, videos?: MatchStats["videos"], clipPrefix?: string): TriSegment[] {
+  const aliases = (outcome: string, fallback: string) => (clipPrefix ? [`${clipPrefix} ${outcome}`] : [fallback]);
   return [
     {
       label: "Progressive Plays",
       value: breakdown.progressivePlays,
       tone: "positive",
-      clip: clipRef(videos, "Progressive Plays"),
+      clip: clipRef(videos, ...aliases("Progressive", "Progressive Plays")),
     },
     {
       label: "Lost Plays",
       value: breakdown.lostPlays,
       tone: "negative",
-      clip: clipRef(videos, "Lost Plays"),
+      clip: clipRef(videos, ...aliases("Lost", "Lost Plays")),
     },
-    { label: "Neutral Plays", value: breakdown.neutralPlays, tone: "muted" },
+    {
+      label: "Neutral Plays",
+      value: breakdown.neutralPlays,
+      tone: "muted",
+      clip: clipRef(videos, ...aliases("Neutral", "Neutral Plays")),
+    },
   ];
 }
 
@@ -341,14 +263,46 @@ function duelSegments(breakdown: DuelBreakdown, videos?: MatchStats["videos"]): 
       tone: "negative",
       clip: clipRef(videos, "Def. 1v1 Lost", "Defensive 1v1 Lost"),
     },
-    { label: "Neutral", value: breakdown.neutral, tone: "muted" },
+    {
+      label: "Neutral",
+      value: breakdown.neutral,
+      tone: "muted",
+      clip: clipRef(videos, "Def. 1v1 Neutral", "Defensive 1v1 Neutral"),
+    },
   ];
+}
+
+function StatsPercentTopic({
+  title,
+  total,
+  totalLabel,
+  totalUnit,
+  games,
+  rate,
+  rateLabel,
+}: {
+  title: string;
+  total: number;
+  totalLabel: string;
+  totalUnit: string;
+  games?: number;
+  rate: number;
+  rateLabel: string;
+}) {
+  return (
+    <section className="stats-topic">
+      <h3 className="stats-topic__title">{title}</h3>
+      <div className="stats-topic__panel stats-topic__panel--duo">
+        <StatsFigure label={totalLabel} value={total} unit={totalUnit} games={games} />
+        <StatsFigure label={rateLabel} value={rate} rate />
+      </div>
+    </section>
+  );
 }
 
 export function StatsHeroSideboard({
   summary,
   games,
-  videos,
 }: {
   summary: MatchSummary;
   games?: number;
@@ -356,45 +310,25 @@ export function StatsHeroSideboard({
 }) {
   return (
     <div className="stats-board-v2">
-      <StatsRateTopic
-        title="Touches"
-        total={summary.touches}
-        totalLabel="Total touches"
-        totalUnit="touches"
+      <StatsPercentTopic
+        title="Possessions"
+        total={summary.possessions}
+        totalLabel="Total possessions"
+        totalUnit="possessions"
         games={games}
         rate={summary.offensive1v1Share}
         rateLabel="Offensive 1v1"
-        primary={summary.offensive1v1}
-        secondary={summary.otherTouches}
-        primaryLabel="Offensive 1v1"
-        secondaryLabel="Other touches"
-        primaryTone="accent"
-        secondaryTone="muted"
-        showShare={false}
       />
-      <StatsTriTopic
+      <StatsPercentTopic
         title="Offensive 1v1"
         total={summary.offensive1v1}
         totalLabel="Offensive 1v1"
         totalUnit="plays"
         games={games}
-        segments={[
-          {
-            label: "Progressive Plays",
-            value: summary.offensiveProgressive,
-            tone: "positive",
-            clip: clipRef(videos, "Progressive Plays"),
-          },
-          {
-            label: "Lost Plays",
-            value: summary.offensiveLost,
-            tone: "negative",
-            clip: clipRef(videos, "Lost Plays"),
-          },
-          { label: "Neutral Plays", value: summary.offensiveNeutral, tone: "muted" },
-        ]}
+        rate={summary.offensiveProgressiveShare}
+        rateLabel="Progressive"
       />
-      <StatsTriTopic
+      <StatsPercentTopic
         title="Defensive 1v1"
         total={summary.defensive1v1}
         totalLabel="Defensive 1v1"
@@ -402,21 +336,6 @@ export function StatsHeroSideboard({
         games={games}
         rate={summary.defensiveWinRate}
         rateLabel="Won rate"
-        segments={[
-          {
-            label: "Won",
-            value: summary.defensiveWon,
-            tone: "positive",
-            clip: clipRef(videos, "Def. 1v1 Won", "Defensive 1v1 Won"),
-          },
-          {
-            label: "Lost",
-            value: summary.defensiveLost,
-            tone: "negative",
-            clip: clipRef(videos, "Def. 1v1 Lost", "Defensive 1v1 Lost"),
-          },
-          { label: "Neutral", value: summary.defensiveNeutral, tone: "muted" },
-        ]}
       />
     </div>
   );
@@ -424,12 +343,10 @@ export function StatsHeroSideboard({
 
 export function FacingBoard({
   facing,
-  offensiveTotal,
   games,
   videos,
 }: {
   facing: MatchStats["facing1v1"];
-  offensiveTotal: number;
   games?: number;
   videos?: MatchStats["videos"];
 }) {
@@ -441,8 +358,6 @@ export function FacingBoard({
         totalLabel="Facing 1v1"
         totalUnit="plays"
         games={games}
-        rate={percent(facing.total, offensiveTotal)}
-        rateLabel="of Off. 1v1"
         segments={playSegments(facing, videos)}
       />
       <div className="move-children">
@@ -454,7 +369,7 @@ export function FacingBoard({
               key={move.id}
               title={move.label}
               total={move.total}
-              segments={playSegments(move, videos)}
+              segments={playSegments(move, videos, move.label)}
               games={games}
               unit="plays"
               compact
@@ -480,6 +395,7 @@ export function BackBoard({
       <OutcomeMeter
         title="Back 1v1"
         total={back.total}
+        clip={clipRef(videos, "Back 1v1")}
         segments={playSegments(back, videos)}
         games={games}
         unit="plays"

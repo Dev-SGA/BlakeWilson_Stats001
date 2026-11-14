@@ -187,16 +187,20 @@ type CardProps = {
   layout?: "list" | "tiles";
   nested?: boolean;
   compact?: boolean;
+  clip?: ClipRef;
   children?: React.ReactNode;
 };
 
-function OutcomeCard({ title, total, unit, accent, segments, badge, note, layout = "list", nested = false, compact = false, children }: CardProps) {
+function OutcomeCard({ title, total, unit, accent, segments, badge, note, layout = "list", nested = false, compact = false, clip, children }: CardProps) {
   return (
     <section className={`bw-card bw-card--${accent}${nested ? " bw-card--nested" : ""}${compact ? " bw-card--compact" : ""}`}>
       {compact ? (
         <div className="bw-card__head">
           <div className="bw-card__titles">
-            <h3 className="bw-card__title">{title}</h3>
+            <h3 className="bw-card__title">
+              {title}
+              <PdfPlay clip={clip} />
+            </h3>
             {nested && badge ? <span className="bw-card__sub">{badge}</span> : null}
           </div>
           <div className="bw-kpi bw-kpi--inline">
@@ -208,7 +212,10 @@ function OutcomeCard({ title, total, unit, accent, segments, badge, note, layout
       ) : (
         <>
           <div className="bw-card__head">
-            <h3 className="bw-card__title">{title}</h3>
+            <h3 className="bw-card__title">
+              {title}
+              <PdfPlay clip={clip} />
+            </h3>
             {badge ? <span className="bw-badge">{badge}</span> : null}
           </div>
           <div className="bw-kpi">
@@ -225,11 +232,12 @@ function OutcomeCard({ title, total, unit, accent, segments, badge, note, layout
   );
 }
 
-function playSegments(breakdown: PlayBreakdown, videos?: GameStats["videos"]): Segment[] {
+function playSegments(breakdown: PlayBreakdown, videos?: GameStats["videos"], clipPrefix?: string): Segment[] {
+  const aliases = (outcome: string, fallback: string) => (clipPrefix ? [`${clipPrefix} ${outcome}`] : [fallback]);
   return [
-    { label: "Progressive Plays", short: "Progressive", value: breakdown.progressivePlays, tone: "green", clip: clipRef(videos, "Progressive Plays") },
-    { label: "Lost Plays", short: "Lost", value: breakdown.lostPlays, tone: "amber", clip: clipRef(videos, "Lost Plays") },
-    { label: "Neutral Plays", short: "Neutral", value: breakdown.neutralPlays, tone: "grey" },
+    { label: "Progressive Plays", short: "Progressive", value: breakdown.progressivePlays, tone: "green", clip: clipRef(videos, ...aliases("Progressive", "Progressive Plays")) },
+    { label: "Lost Plays", short: "Lost", value: breakdown.lostPlays, tone: "amber", clip: clipRef(videos, ...aliases("Lost", "Lost Plays")) },
+    { label: "Neutral Plays", short: "Neutral", value: breakdown.neutralPlays, tone: "grey", clip: clipRef(videos, ...aliases("Neutral", "Neutral Plays")) },
   ];
 }
 
@@ -237,7 +245,7 @@ function duelSegments(breakdown: DuelBreakdown, videos?: GameStats["videos"]): S
   return [
     { label: "Won", value: breakdown.won, tone: "green", clip: clipRef(videos, "Def. 1v1 Won", "Defensive 1v1 Won") },
     { label: "Lost", value: breakdown.lost, tone: "amber", clip: clipRef(videos, "Def. 1v1 Lost", "Defensive 1v1 Lost") },
-    { label: "Neutral", value: breakdown.neutral, tone: "grey" },
+    { label: "Neutral", value: breakdown.neutral, tone: "grey", clip: clipRef(videos, "Def. 1v1 Neutral", "Defensive 1v1 Neutral") },
   ];
 }
 
@@ -278,8 +286,8 @@ function HeatmapCard({ heatmap }: { heatmap: GameStats["heatmap"] }) {
   const all = [...heatmap.firstHalf, ...heatmap.secondHalf];
   const periods = [
     { label: "All", points: all },
-    { label: "1T", points: heatmap.firstHalf },
-    { label: "2T", points: heatmap.secondHalf },
+    { label: "1st H", points: heatmap.firstHalf },
+    { label: "2nd H", points: heatmap.secondHalf },
   ];
 
   return (
@@ -287,7 +295,7 @@ function HeatmapCard({ heatmap }: { heatmap: GameStats["heatmap"] }) {
       <div className="bw-card__head">
         <h3 className="bw-card__title">Heatmap</h3>
         <span className="bw-badge">
-          {all.length} touches · {finalThirdCount(all)} final third
+          {all.length} possessions · {finalThirdCount(all)} final third
         </span>
       </div>
       <div className="bw-maps">
@@ -297,7 +305,7 @@ function HeatmapCard({ heatmap }: { heatmap: GameStats["heatmap"] }) {
             <figcaption className="bw-map__caption">
               <strong>{period.label}</strong>
               <span>
-                {period.points.length} touches · {finalThirdCount(period.points)} final third
+                {period.points.length} possessions · {finalThirdCount(period.points)} final third
               </span>
             </figcaption>
           </figure>
@@ -315,7 +323,7 @@ function SummaryPage(props: StatsGamePdfSheetProps) {
     label: stats.meta.subtitle,
     shortLabel: stats.meta.subtitle,
     logo: stats.opponentLogo,
-    touches: stats.touches,
+    possessions: stats.possessions,
     offensive1v1: stats.offensive1v1,
     defensive1v1: stats.defensive1v1,
     facing1v1: stats.facing1v1,
@@ -333,15 +341,15 @@ function SummaryPage(props: StatsGamePdfSheetProps) {
         <div className="bw-body">
           <div className="bw-grid3">
             <OutcomeCard
-              title="Touches"
-              total={summary.touches}
-              unit="touches"
+              title="Possessions"
+              total={summary.possessions}
+              unit="possessions"
               accent="off"
               badge={`${summary.offensive1v1Share}% Offensive 1v1`}
-              note={perGameNote(summary.touches, games)}
+              note={perGameNote(summary.possessions, games)}
               segments={[
                 { label: "Offensive 1v1", value: summary.offensive1v1, tone: "blue" },
-                { label: "Other touches", value: summary.otherTouches, tone: "grey" },
+                { label: "Other possessions", value: summary.otherPossessions, tone: "grey" },
               ]}
             />
             <OutcomeCard
@@ -399,7 +407,6 @@ function OffensivePage(props: StatsGamePdfSheetProps) {
               accent="off"
               compact
               layout="tiles"
-              badge={`${pct(facing1v1.total, offensive1v1.total)}% of Off. 1v1`}
               note={perGameNote(facing1v1.total, games)}
               segments={playSegments(facing1v1, stats.videos)}
             />
@@ -417,7 +424,7 @@ function OffensivePage(props: StatsGamePdfSheetProps) {
                     accent="off"
                     layout="tiles"
                     badge={`${pct(item.total, facing1v1.total)}% of Facing`}
-                    segments={playSegments(item, stats.videos)}
+                    segments={playSegments(item, stats.videos, item.label)}
                   />
                 ))}
               </div>
@@ -425,11 +432,11 @@ function OffensivePage(props: StatsGamePdfSheetProps) {
             <OutcomeCard
               title="Back 1v1"
               total={back1v1.total}
+              clip={clipRef(stats.videos, "Back 1v1")}
               unit="plays"
               accent="off"
               compact
               layout="tiles"
-              badge={`${pct(back1v1.total, offensive1v1.total)}% of Off. 1v1`}
               note={perGameNote(back1v1.total, games)}
               segments={playSegments(back1v1, stats.videos)}
             />

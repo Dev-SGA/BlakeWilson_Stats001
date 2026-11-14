@@ -4,7 +4,7 @@ import "./pdf.css";
 
 export const metadata: Metadata = {
   title: "Blake Wilson — Game Stats 001 | SGA Performance",
-  description: "1v1 statistics for Blake Wilson — touches, offensive and defensive 1v1 breakdown.",
+  description: "1v1 statistics for Blake Wilson — possessions, offensive and defensive 1v1 breakdown.",
 };
 
 export const viewport = {

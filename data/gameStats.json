@@ -17,7 +17,7 @@
       "label": "vs Minnesota United FC",
       "shortLabel": "Minnesota United",
       "logo": "/clubs/minnesota-united.png",
-      "touches": {
+      "possessions": {
         "total": 31,
         "videoLink": ""
       },
@@ -69,43 +69,173 @@
       },
       "heatmap": {
         "firstHalf": [
-          { "x": 37.56, "y": 4.09 },
-          { "x": 86.26, "y": 7.42 },
-          { "x": 81.44, "y": 5.09 },
-          { "x": 66.98, "y": 1.6 },
-          { "x": 65.98, "y": 14.73 },
-          { "x": 65.65, "y": 1.6 },
-          { "x": 11.13, "y": 22.21 },
-          { "x": 21.43, "y": 23.54 },
-          { "x": 51.36, "y": 2.26 },
-          { "x": 108.87, "y": 11.08 },
-          { "x": 12.96, "y": 23.71 },
-          { "x": 70.31, "y": 4.09 },
-          { "x": 106.05, "y": 1.27 },
-          { "x": 37.06, "y": 1.27 },
-          { "x": 43.04, "y": 11.57 },
-          { "x": 83.94, "y": 4.43 },
-          { "x": 80.45, "y": 15.73 },
-          { "x": 79.45, "y": 15.73 },
-          { "x": 69.14, "y": 9.25 },
-          { "x": 49.86, "y": 14.57 },
-          { "x": 38.39, "y": 20.05 },
-          { "x": 61.83, "y": 7.92 }
+          {
+            "x": 37.56,
+            "y": 4.09
+          },
+          {
+            "x": 86.26,
+            "y": 7.42
+          },
+          {
+            "x": 81.44,
+            "y": 5.09
+          },
+          {
+            "x": 66.98,
+            "y": 1.6
+          },
+          {
+            "x": 65.98,
+            "y": 14.73
+          },
+          {
+            "x": 65.65,
+            "y": 1.6
+          },
+          {
+            "x": 11.13,
+            "y": 22.21
+          },
+          {
+            "x": 21.43,
+            "y": 23.54
+          },
+          {
+            "x": 51.36,
+            "y": 2.26
+          },
+          {
+            "x": 108.87,
+            "y": 11.08
+          },
+          {
+            "x": 12.96,
+            "y": 23.71
+          },
+          {
+            "x": 70.31,
+            "y": 4.09
+          },
+          {
+            "x": 106.05,
+            "y": 1.27
+          },
+          {
+            "x": 37.06,
+            "y": 1.27
+          },
+          {
+            "x": 43.04,
+            "y": 11.57
+          },
+          {
+            "x": 83.94,
+            "y": 4.43
+          },
+          {
+            "x": 80.45,
+            "y": 15.73
+          },
+          {
+            "x": 79.45,
+            "y": 15.73
+          },
+          {
+            "x": 69.14,
+            "y": 9.25
+          },
+          {
+            "x": 49.86,
+            "y": 14.57
+          },
+          {
+            "x": 38.39,
+            "y": 20.05
+          },
+          {
+            "x": 61.83,
+            "y": 7.92
+          }
         ],
         "secondHalf": [
-          { "x": 10.63, "y": 33.18 },
-          { "x": 21.1, "y": 13.07 },
-          { "x": 41.71, "y": 14.73 },
-          { "x": 49.36, "y": 7.58 },
-          { "x": 72.14, "y": 7.09 },
-          { "x": 101.39, "y": 6.42 },
-          { "x": 7.14, "y": 8.08 },
-          { "x": 60.17, "y": 2.76 },
-          { "x": 23.59, "y": 25.7 }
+          {
+            "x": 10.63,
+            "y": 33.18
+          },
+          {
+            "x": 21.1,
+            "y": 13.07
+          },
+          {
+            "x": 41.71,
+            "y": 14.73
+          },
+          {
+            "x": 49.36,
+            "y": 7.58
+          },
+          {
+            "x": 72.14,
+            "y": 7.09
+          },
+          {
+            "x": 101.39,
+            "y": 6.42
+          },
+          {
+            "x": 7.14,
+            "y": 8.08
+          },
+          {
+            "x": 60.17,
+            "y": 2.76
+          },
+          {
+            "x": 23.59,
+            "y": 25.7
+          }
         ],
         "videoLink": ""
       },
-      "videos": []
+      "videos": [
+        {
+          "label": "Get Away from Opposition Progressive",
+          "url": "https://drive.google.com/file/d/1_hISJdE1JnYkojTzYThPFU4GQze0LNOP/view?usp=drive_link"
+        },
+        {
+          "label": "Get Away from Opposition Neutral",
+          "url": "https://drive.google.com/file/d/1lV09GaSgCzA1QZKLrClfsD1Jtrn9I5Pg/view?usp=drive_link"
+        },
+        {
+          "label": "Get Away from Opposition Lost",
+          "url": "https://drive.google.com/file/d/1KuJXYr8uB1gI3Ds6TUfJsPVOAm4HDoXC/view?usp=drive_link"
+        },
+        {
+          "label": "Dribble Opponent Progressive",
+          "url": "https://drive.google.com/file/d/1EwVmkSte_8cyzQBOHL4Ce48HYhymszlf/view?usp=drive_link"
+        },
+        {
+          "label": "Dribble Opponent Lost",
+          "url": "https://drive.google.com/file/d/1mHeL194afi9b5CpZqoF_x4RUV5t_hUz8/view?usp=drive_link"
+        },
+        {
+          "label": "Back 1v1",
+          "url": "https://drive.google.com/file/d/1b22BpzvW1Z6yxcltA2Rcrh0KGGEhug_i/view?usp=drive_link"
+        },
+        {
+          "label": "Defensive 1v1 Won",
+          "url": "https://drive.google.com/file/d/1yAEsKZkVVl7uIHJjHNIo6Hwt1-NW4rHF/view?usp=drive_link"
+        },
+        {
+          "label": "Defensive 1v1 Neutral",
+          "url": "https://drive.google.com/file/d/1hF3yGAFOyS_OFyl06wx7l_KJtR_pFlT_/view?usp=drive_link"
+        },
+        {
+          "label": "Defensive 1v1 Lost",
+          "url": "https://drive.google.com/file/d/18uzinE8C5gdc-Wee6SW3oBCdBfJ_LyAN/view?usp=drive_link"
+        }
+      ]
     }
   ]
 }
