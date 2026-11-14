@@ -358,14 +358,11 @@ function SummaryPage(props: StatsGamePdfSheetProps) {
               unit="plays"
               accent="off"
               note={perGameNote(summary.offensive1v1, games)}
-              segments={playSegments(
-                {
-                  progressivePlays: summary.offensiveProgressive,
-                  lostPlays: summary.offensiveLost,
-                  neutralPlays: summary.offensiveNeutral,
-                },
-                stats.videos,
-              )}
+              segments={playSegments({
+                progressivePlays: summary.offensiveProgressive,
+                lostPlays: summary.offensiveLost,
+                neutralPlays: summary.offensiveNeutral,
+              })}
             />
             <OutcomeCard
               title="Defensive 1v1"
@@ -374,10 +371,7 @@ function SummaryPage(props: StatsGamePdfSheetProps) {
               accent="def"
               badge={`${summary.defensiveWinRate}% won`}
               note={perGameNote(summary.defensive1v1, games)}
-              segments={duelSegments(
-                { won: summary.defensiveWon, lost: summary.defensiveLost, neutral: summary.defensiveNeutral },
-                stats.videos,
-              )}
+              segments={duelSegments({ won: summary.defensiveWon, lost: summary.defensiveLost, neutral: summary.defensiveNeutral })}
             />
           </div>
           <HeatmapCard heatmap={stats.heatmap} />
