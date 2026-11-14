@@ -13,7 +13,7 @@ export type Topic = {
 
 const PHASE_LABEL: Record<Phase, string> = {
   "build-up": "Build-Up",
-  offensive: "Offensive Phase",
+  offensive: "Offensive 1v1",
   defensive: "Defensive Phase",
   stats: "Summary",
 };

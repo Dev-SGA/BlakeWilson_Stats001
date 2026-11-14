@@ -327,15 +327,15 @@ body::before {
 }
 
 .topic--defensive {
-  --topic-color: var(--tone-accent);
-  background: color-mix(in srgb, var(--sga-blue) 14%, var(--surface));
-  border-left-color: var(--tone-accent);
+  --topic-color: var(--sga-blue);
+  background: color-mix(in srgb, var(--sga-blue) 12%, var(--surface));
+  border-left-color: var(--sga-blue);
 }
 
 .topic--offensive {
-  --topic-color: var(--tone-positive);
-  background: color-mix(in srgb, var(--tone-positive) 12%, var(--surface));
-  border-left-color: var(--tone-positive);
+  --topic-color: var(--tone-accent);
+  background: color-mix(in srgb, var(--sga-blue) 16%, var(--surface));
+  border-left-color: var(--tone-accent);
 }
 
 .topic__trigger-text {
@@ -357,11 +357,11 @@ body::before {
 }
 
 .topic--offensive .topic__phase {
-  color: var(--tone-positive);
+  color: var(--tone-accent);
 }
 
 .topic--defensive .topic__phase {
-  color: var(--tone-accent);
+  color: var(--sga-blue);
 }
 
 .topic--stats {
@@ -1044,7 +1044,7 @@ body::before {
 
 .move-children__rail {
   border-radius: 999px;
-  background: color-mix(in srgb, var(--tone-positive) 55%, transparent);
+  background: color-mix(in srgb, var(--tone-accent) 55%, transparent);
 }
 
 .move-children__list {
@@ -1065,7 +1065,7 @@ body::before {
 
 .metric-card--sub {
   padding: 14px 16px;
-  border-left: 2px solid color-mix(in srgb, var(--tone-positive) 45%, var(--line));
+  border-left: 2px solid color-mix(in srgb, var(--tone-accent) 45%, var(--line));
 }
 
 .metric-card--sub .metric-card__title {
