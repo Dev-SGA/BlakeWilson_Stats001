@@ -18,7 +18,7 @@
       "shortLabel": "Session 001",
       "logo": "",
       "touches": {
-        "total": 32,
+        "total": 31,
         "videoLink": ""
       },
       "offensive1v1": {
@@ -36,16 +36,11 @@
         "videoLink": ""
       },
       "facing1v1": {
-        "total": 16,
-        "moves": [
-          {
-            "id": "facing",
-            "label": "Facing 1v1",
-            "total": 10,
-            "progressivePlays": 5,
-            "lostPlays": 2,
-            "neutralPlays": 3
-          },
+        "total": 10,
+        "progressivePlays": 5,
+        "lostPlays": 2,
+        "neutralPlays": 3,
+        "classes": [
           {
             "id": "get-away",
             "label": "Get Away from Opposition",

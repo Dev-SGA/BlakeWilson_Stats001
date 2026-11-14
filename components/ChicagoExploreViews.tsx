@@ -282,6 +282,7 @@ export function OutcomeMeter({
   segments,
   games,
   unit,
+  compact = false,
 }: {
   title: string;
   total: number;
@@ -289,9 +290,10 @@ export function OutcomeMeter({
   segments: TriSegment[];
   games?: number;
   unit?: string;
+  compact?: boolean;
 }) {
   return (
-    <div className="metric-card">
+    <div className={`metric-card${compact ? " metric-card--sub" : ""}`}>
       <h3 className="metric-card__title">{title}</h3>
       {games && unit ? (
         <CountLine value={total} unit={unit} games={games} />
@@ -422,31 +424,44 @@ export function StatsHeroSideboard({
 
 export function FacingBoard({
   facing,
+  offensiveTotal,
   games,
   videos,
 }: {
   facing: MatchStats["facing1v1"];
+  offensiveTotal: number;
   games?: number;
   videos?: MatchStats["videos"];
 }) {
   return (
     <div className="moves-board">
-      <section className="stats-topic">
-        <h3 className="stats-topic__title">Facing 1v1</h3>
-        <div className="stats-topic__panel stats-topic__panel--solo">
-          <StatsFigure label="Facing 1v1" value={facing.total} unit="plays" games={games} />
+      <StatsTriTopic
+        title="Facing 1v1"
+        total={facing.total}
+        totalLabel="Facing 1v1"
+        totalUnit="plays"
+        games={games}
+        rate={percent(facing.total, offensiveTotal)}
+        rateLabel="of Off. 1v1"
+        segments={playSegments(facing, videos)}
+      />
+      <div className="move-children">
+        <span className="move-children__rail" aria-hidden="true" />
+        <div className="move-children__list">
+          <p className="move-children__caption">Classes</p>
+          {facing.classes.map((move) => (
+            <OutcomeMeter
+              key={move.id}
+              title={move.label}
+              total={move.total}
+              segments={playSegments(move, videos)}
+              games={games}
+              unit="plays"
+              compact
+            />
+          ))}
         </div>
-      </section>
-      {facing.moves.map((move) => (
-        <OutcomeMeter
-          key={move.id}
-          title={move.label}
-          total={move.total}
-          segments={playSegments(move, videos)}
-          games={games}
-          unit="plays"
-        />
-      ))}
+      </div>
     </div>
   );
 }

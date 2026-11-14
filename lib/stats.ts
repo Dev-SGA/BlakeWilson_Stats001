@@ -14,8 +14,8 @@ export type DuelBreakdown = {
   neutral: number;
 };
 
-/** A move type inside the Facing 1v1 group (Facing, Get Away, Dribble Opponent). */
-export type FacingMove = PlayBreakdown & {
+/** A class of play inside the Facing 1v1 group (Get Away, Dribble Opponent). */
+export type FacingClass = PlayBreakdown & {
   id: string;
   label: string;
   total: number;
@@ -47,9 +47,9 @@ export type MatchStats = {
     total: number;
     videoLink: string;
   };
-  facing1v1: {
+  facing1v1: PlayBreakdown & {
     total: number;
-    moves: FacingMove[];
+    classes: FacingClass[];
     videoLink: string;
   };
   back1v1: PlayBreakdown & {
@@ -208,11 +208,11 @@ function addDuels(left: DuelBreakdown, right: DuelBreakdown): DuelBreakdown {
 
 /** Same match shape as the individual games, with every recorded number added together. */
 export function seasonMatch(matches: MatchStats[]): MatchStats {
-  const moveIds = new Map<string, FacingMove>();
+  const classIds = new Map<string, FacingClass>();
   for (const match of matches) {
-    for (const move of match.facing1v1.moves) {
-      const current = moveIds.get(move.id);
-      moveIds.set(
+    for (const move of match.facing1v1.classes) {
+      const current = classIds.get(move.id);
+      classIds.set(
         move.id,
         current
           ? {
@@ -252,8 +252,11 @@ export function seasonMatch(matches: MatchStats[]): MatchStats {
       videoLink: "",
     },
     facing1v1: {
+      ...matches
+        .map((match): PlayBreakdown => match.facing1v1)
+        .reduce(addPlays),
       total: matches.reduce((sum, match) => sum + match.facing1v1.total, 0),
-      moves: [...moveIds.values()],
+      classes: [...classIds.values()],
       videoLink: "",
     },
     back1v1: {

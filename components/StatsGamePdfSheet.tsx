@@ -405,16 +405,24 @@ export function StatsGamePdfSheet({ stats, photoUrl, logoUrl, clubLogoUrl, oppon
 
           <div className="spdf-stack">
             <PdfSection title="Facing 1v1" kpi={facing1v1.total} unit="Total" size="lg" panelOnly>
-              <div className="spdf-pass-results-app__pair">
-                {facing1v1.moves.map((move) => (
-                  <MovePanel
-                    key={move.id}
-                    title={move.label}
-                    total={move.total}
-                    breakdown={move}
-                    videos={stats.videos}
-                  />
-                ))}
+              <div className="spdf-pass-results-app">
+                <MovePanel
+                  title="Facing 1v1"
+                  total={facing1v1.total}
+                  breakdown={facing1v1}
+                  videos={stats.videos}
+                />
+                <div className="spdf-pass-results-app__pair">
+                  {facing1v1.classes.map((move) => (
+                    <MovePanel
+                      key={move.id}
+                      title={move.label}
+                      total={move.total}
+                      breakdown={move}
+                      videos={stats.videos}
+                    />
+                  ))}
+                </div>
               </div>
             </PdfSection>
 

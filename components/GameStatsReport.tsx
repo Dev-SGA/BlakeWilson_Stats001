@@ -121,19 +121,28 @@ function buildTopics(match: MatchStats): Topic[] {
       id: "stats",
       title: "Stats",
       phase: "stats",
-      content: <StatsHeroSideboard summary={summary} games={games} videos={videos} />,
-    },
-    {
-      id: "heatmap",
-      title: "Heatmap",
-      phase: "stats",
-      content: <HeatmapBoard heatmap={match.heatmap} />,
+      content: (
+        <div className="stats-stack">
+          <StatsHeroSideboard summary={summary} games={games} videos={videos} />
+          <section className="stats-topic">
+            <h3 className="stats-topic__title">Heatmap</h3>
+            <HeatmapBoard heatmap={match.heatmap} />
+          </section>
+        </div>
+      ),
     },
     {
       id: "facing-1v1",
       title: "Facing 1v1",
       phase: "offensive",
-      content: <FacingBoard facing={match.facing1v1} games={games} videos={videos} />,
+      content: (
+        <FacingBoard
+          facing={match.facing1v1}
+          offensiveTotal={match.offensive1v1.total}
+          games={games}
+          videos={videos}
+        />
+      ),
     },
     {
       id: "back-1v1",

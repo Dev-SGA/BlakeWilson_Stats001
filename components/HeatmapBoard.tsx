@@ -145,7 +145,9 @@ export function HeatmapBoard({
   return (
     <div className="heatmap-card">
       <div className="heatmap-card__toolbar">
-        <span className="heatmap-card__count">{points.length} touches</span>
+        <span className="heatmap-card__count">
+          {points.length} touches · {points.filter((point) => point.x >= (FIELD_W * 2) / 3).length} final third
+        </span>
         <div className="match-nav__pills" role="group" aria-label="Heatmap period">
           {modes.map((item) => (
             <button
