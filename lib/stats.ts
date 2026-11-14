@@ -21,6 +21,12 @@ export type FacingMove = PlayBreakdown & {
   total: number;
 };
 
+/** A touch location on the pitch. Field is ~120 x ~80. */
+export type HeatPoint = {
+  x: number;
+  y: number;
+};
+
 export type MatchKind = "baseline" | "session";
 
 export type MatchStats = {
@@ -48,6 +54,11 @@ export type MatchStats = {
   };
   back1v1: PlayBreakdown & {
     total: number;
+    videoLink: string;
+  };
+  heatmap: {
+    firstHalf: HeatPoint[];
+    secondHalf: HeatPoint[];
     videoLink: string;
   };
   videos?: { label: string; url: string }[];
@@ -85,6 +96,7 @@ export type GameStats = {
   defensive1v1: MatchStats["defensive1v1"];
   facing1v1: MatchStats["facing1v1"];
   back1v1: MatchStats["back1v1"];
+  heatmap: MatchStats["heatmap"];
   videos?: { label: string; url: string }[];
 };
 
@@ -251,6 +263,11 @@ export function seasonMatch(matches: MatchStats[]): MatchStats {
       total: matches.reduce((sum, match) => sum + match.back1v1.total, 0),
       videoLink: "",
     },
+    heatmap: {
+      firstHalf: matches.flatMap((match) => match.heatmap.firstHalf),
+      secondHalf: matches.flatMap((match) => match.heatmap.secondHalf),
+      videoLink: "",
+    },
     games: matches.length,
   };
 }
@@ -315,6 +332,7 @@ export function toGameStats(report: StatsReport, match: MatchStats): GameStats {
     defensive1v1: match.defensive1v1,
     facing1v1: match.facing1v1,
     back1v1: match.back1v1,
+    heatmap: match.heatmap,
     videos: match.videos,
   };
 }

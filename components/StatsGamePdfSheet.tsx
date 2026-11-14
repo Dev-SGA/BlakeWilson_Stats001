@@ -304,6 +304,7 @@ function SummaryPdfPage({
     defensive1v1: stats.defensive1v1,
     facing1v1: stats.facing1v1,
     back1v1: stats.back1v1,
+    heatmap: stats.heatmap,
     videos: stats.videos,
   });
   const games = stats.meta.games;

@@ -12,6 +12,7 @@ import {
   FacingBoard,
   StatsHeroSideboard,
 } from "@/components/ChicagoExploreViews";
+import { HeatmapBoard } from "@/components/HeatmapBoard";
 import { TopicsBoard, type Topic } from "@/components/TopicsBoard";
 import { BRAND } from "@/lib/brand";
 import {
@@ -121,6 +122,12 @@ function buildTopics(match: MatchStats): Topic[] {
       title: "Stats",
       phase: "stats",
       content: <StatsHeroSideboard summary={summary} games={games} videos={videos} />,
+    },
+    {
+      id: "heatmap",
+      title: "Heatmap",
+      phase: "stats",
+      content: <HeatmapBoard heatmap={match.heatmap} />,
     },
     {
       id: "facing-1v1",
