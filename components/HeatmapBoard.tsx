@@ -158,37 +158,49 @@ export function HeatmapBoard({
     { id: "second", label: "2nd H", count: heatmap.secondHalf.length },
   ];
 
+  const empty = modes[0].count === 0;
+
   return (
     <div className="heatmap-card">
       <div className="heatmap-card__toolbar">
         <span className="heatmap-card__count">
-          {points.length} possessions · {finalThirdCount(points)} final third
+          {empty ? "Coordinates pending" : `${points.length} possessions · ${finalThirdCount(points)} final third`}
         </span>
-        <div className="match-nav__pills" role="group" aria-label="Heatmap period">
-          {modes.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`match-nav__pill${mode === item.id ? " is-active" : ""}`}
-              aria-pressed={mode === item.id}
-              onClick={() => setMode(item.id)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
+        {empty ? null : (
+          <div className="match-nav__pills" role="group" aria-label="Heatmap period">
+            {modes.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`match-nav__pill${mode === item.id ? " is-active" : ""}`}
+                aria-pressed={mode === item.id}
+                onClick={() => setMode(item.id)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="heatmap-pitch">
         <PitchLines />
         <canvas ref={canvasRef} className="heatmap-pitch__layer" width={CANVAS_W} height={CANVAS_H} />
+        {empty ? (
+          <div className="heatmap-pitch__empty">
+            <strong>Heatmap coming soon</strong>
+            <span>Touch coordinates for this match have not been logged yet.</span>
+          </div>
+        ) : null}
       </div>
 
-      <div className="heatmap-legend">
-        <span>Low</span>
-        <span className="heatmap-legend__bar" aria-hidden="true" />
-        <span>High</span>
-      </div>
+      {empty ? null : (
+        <div className="heatmap-legend">
+          <span>Low</span>
+          <span className="heatmap-legend__bar" aria-hidden="true" />
+          <span>High</span>
+        </div>
+      )}
     </div>
   );
 }

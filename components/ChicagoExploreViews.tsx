@@ -50,36 +50,6 @@ function ClipIcon({ clip }: { clip?: ClipRef }) {
   );
 }
 
-function ExploreBar({
-  primary,
-  secondary,
-  primaryTone,
-  secondaryTone,
-  label,
-}: {
-  primary: number;
-  secondary: number;
-  primaryTone: Tone;
-  secondaryTone: Tone;
-  label: string;
-}) {
-  const total = primary + secondary;
-  const primaryPct = total > 0 ? (primary / total) * 100 : 0;
-
-  return (
-    <div className="stats-bar" role="img" aria-label={label}>
-      {total === 0 ? (
-        <span className="stats-bar__seg stats-bar__seg--muted" style={{ width: "100%" }} />
-      ) : (
-        <>
-          <span className={`stats-bar__seg stats-bar__seg--${primaryTone}`} style={{ width: `${primaryPct}%` }} />
-          <span className={`stats-bar__seg stats-bar__seg--${secondaryTone}`} style={{ width: `${100 - primaryPct}%` }} />
-        </>
-      )}
-    </div>
-  );
-}
-
 type TriSegment = {
   label: string;
   value: number;
@@ -87,40 +57,74 @@ type TriSegment = {
   clip?: ClipRef;
 };
 
+/** Outcome meter with in-bar shares and a three-column readout below. */
 function TriSplit({ segments, label }: { segments: TriSegment[]; label: string }) {
   const total = segments.reduce((sum, segment) => sum + segment.value, 0);
 
   return (
     <div className="stats-viz">
       <div
-        className="meter"
+        className="meter meter--tri"
         role="img"
-        aria-label={label ?? segments.map((segment) => `${segment.label}: ${segment.value}`).join(". ")}
+        aria-label={`${label}: ${segments.map((segment) => `${segment.label} ${segment.value}`).join(", ")}`}
       >
         {total === 0 ? (
-          <span className="meter__seg meter__seg--muted" style={{ width: "100%" }} />
+          <span className="meter__seg meter__seg--muted" style={{ flex: "1 1 0" }} />
         ) : (
-          segments.map((segment) => (
-            <span
-              key={segment.label}
-              className={`meter__seg meter__seg--${segment.tone}`}
-              style={{ width: `${percent(segment.value, total)}%` }}
-            />
-          ))
+          segments
+            .filter((segment) => segment.value > 0)
+            .map((segment) => {
+              const share = percent(segment.value, total);
+              return (
+                <span
+                  key={segment.label}
+                  className={`meter__seg meter__seg--${segment.tone}`}
+                  style={{ flex: `${segment.value} 1 0` }}
+                >
+                  {share >= 14 ? <span className="meter__pct">{share}%</span> : null}
+                </span>
+              );
+            })
         )}
       </div>
-      <ul className="stats-viz__legend">
+      <ul className="outcome-grid">
         {segments.map((segment) => (
-          <li key={segment.label}>
-            <span className={`legend__dot legend__dot--${segment.tone}`} />
-            <ClipLabel label={segment.label} clip={segment.clip} />
-            <strong>
-              {formatCount(segment.value)} · {percent(segment.value, total)}%
-            </strong>
+          <li
+            key={segment.label}
+            className={`outcome-chip outcome-chip--${segment.tone}${segment.value === 0 ? " is-empty" : ""}`}
+          >
+            <span className="outcome-chip__label">
+              <span className={`legend__dot legend__dot--${segment.tone}`} />
+              <ClipLabel label={segment.label} clip={segment.clip} />
+            </span>
+            <span className="outcome-chip__value">
+              {formatCount(segment.value)}
+              <small>{percent(segment.value, total)}%</small>
+            </span>
           </li>
         ))}
       </ul>
     </div>
+  );
+}
+
+/** Circular gauge for a 0-100 share. */
+function RateRing({ value, tone }: { value: number; tone: Tone }) {
+  const radius = 25;
+  const circumference = 2 * Math.PI * radius;
+  const filled = (Math.max(0, Math.min(value, 100)) / 100) * circumference;
+  return (
+    <svg viewBox="0 0 64 64" className={`rate-ring rate-ring--${tone}`} aria-hidden="true">
+      <circle cx={32} cy={32} r={radius} className="rate-ring__track" />
+      <circle
+        cx={32}
+        cy={32}
+        r={radius}
+        className="rate-ring__fill"
+        strokeDasharray={`${filled} ${circumference}`}
+        transform="rotate(-90 32 32)"
+      />
+    </svg>
   );
 }
 
@@ -129,22 +133,45 @@ function StatsFigure({
   value,
   unit,
   games,
-  rate,
 }: {
   label: string;
   value: number;
   unit?: string;
   games?: number;
-  rate?: boolean;
 }) {
   return (
-    <div className={`stats-figure${rate ? " stats-figure--rate" : ""}`}>
+    <div className="stats-figure">
       <span className="stats-figure__label">{label}</span>
       {games && unit ? (
         <CountLine value={value} unit={unit} games={games} />
       ) : (
-        <span className="stats-figure__value">{rate ? `${value}%` : formatCount(value)}</span>
+        <span className="stats-figure__value">{formatCount(value)}</span>
       )}
+    </div>
+  );
+}
+
+function RateFigure({
+  label,
+  rate,
+  tone,
+  caption,
+}: {
+  label: string;
+  rate: number;
+  tone: Tone;
+  caption?: string;
+}) {
+  return (
+    <div className={`stats-figure stats-figure--rate stats-figure--${tone}`}>
+      <span className="stats-figure__label">{label}</span>
+      <div className="stats-figure__rate">
+        <RateRing value={rate} tone={tone} />
+        <div className="stats-figure__rate-text">
+          <span className="stats-figure__value">{rate}%</span>
+          {caption ? <span className="stats-figure__caption">{caption}</span> : null}
+        </div>
+      </div>
     </div>
   );
 }
@@ -156,7 +183,6 @@ function StatsTriTopic({
   totalUnit,
   games,
   rate,
-  rateLabel,
   segments,
   clip,
 }: {
@@ -165,8 +191,7 @@ function StatsTriTopic({
   totalLabel: string;
   totalUnit: string;
   games?: number;
-  rate?: number;
-  rateLabel?: string;
+  rate?: { label: string; value: number; tone: Tone; caption?: string };
   segments: TriSegment[];
   clip?: ClipRef;
 }) {
@@ -176,9 +201,9 @@ function StatsTriTopic({
         {title}
         <ClipIcon clip={clip} />
       </h3>
-      <div className={`stats-topic__panel${rate == null ? " stats-topic__panel--pair" : ""}`}>
+      <div className={`stats-topic__panel stats-topic__panel--tri${rate == null ? " stats-topic__panel--pair" : ""}`}>
         <StatsFigure label={totalLabel} value={total} unit={totalUnit} games={games} />
-        {rate != null ? <StatsFigure label={rateLabel ?? ""} value={rate} rate /> : null}
+        {rate != null ? <RateFigure label={rate.label} rate={rate.value} tone={rate.tone} caption={rate.caption} /> : null}
         <TriSplit segments={segments} label={`${title} breakdown`} />
       </div>
     </section>
@@ -195,6 +220,7 @@ export function OutcomeMeter({
   unit,
   compact = false,
   clip,
+  shareOf,
 }: {
   title: string;
   total: number;
@@ -204,22 +230,38 @@ export function OutcomeMeter({
   unit?: string;
   compact?: boolean;
   clip?: ClipRef;
+  /** Parent group this card is a slice of, e.g. a class inside Facing 1v1. */
+  shareOf?: { total: number; label: string };
 }) {
+  const lead = segments[0];
+  const leadRate = lead ? percent(lead.value, total) : 0;
+
   return (
-    <div className={`metric-card${compact ? " metric-card--sub" : ""}`}>
+    <div className={`metric-card outcome-card${compact ? " metric-card--sub" : ""}`}>
       <h3 className="metric-card__title">
         {title}
         <ClipIcon clip={clip} />
       </h3>
-      {games && unit ? (
-        <CountLine value={total} unit={unit} games={games} />
-      ) : (
-        <p className="metric-card__headline">
-          <span>
-            {formatCount(total)} {totalLabel ?? "plays"}
+      <div className="outcome-card__head">
+        {games && unit ? (
+          <CountLine value={total} unit={unit} games={games} />
+        ) : (
+          <p className="outcome-card__total">
+            <strong>{formatCount(total)}</strong>
+            <span>{totalLabel ?? unit ?? "plays"}</span>
+            {shareOf && shareOf.total > 0 ? (
+              <em className="outcome-card__share">
+                {percent(total, shareOf.total)}% of {shareOf.label}
+              </em>
+            ) : null}
+          </p>
+        )}
+        {lead && total > 0 ? (
+          <span className={`outcome-card__rate outcome-card__rate--${lead.tone}`}>
+            {leadRate}% {lead.label.toLowerCase()}
           </span>
-        </p>
-      )}
+        ) : null}
+      </div>
       <TriSplit segments={segments} label={`${title} breakdown`} />
     </div>
   );
@@ -229,19 +271,19 @@ function playSegments(breakdown: PlayBreakdown, videos?: MatchStats["videos"], c
   const aliases = (outcome: string, fallback: string) => (clipPrefix ? [`${clipPrefix} ${outcome}`] : [fallback]);
   return [
     {
-      label: "Progressive Plays",
+      label: "Progressive",
       value: breakdown.progressivePlays,
       tone: "positive",
       clip: clipRef(videos, ...aliases("Progressive", "Progressive Plays")),
     },
     {
-      label: "Lost Plays",
+      label: "Lost",
       value: breakdown.lostPlays,
       tone: "negative",
       clip: clipRef(videos, ...aliases("Lost", "Lost Plays")),
     },
     {
-      label: "Neutral Plays",
+      label: "Neutral",
       value: breakdown.neutralPlays,
       tone: "muted",
       clip: clipRef(videos, ...aliases("Neutral", "Neutral Plays")),
@@ -280,6 +322,8 @@ function StatsPercentTopic({
   games,
   rate,
   rateLabel,
+  rateTone,
+  rateCaption,
 }: {
   title: string;
   total: number;
@@ -288,13 +332,15 @@ function StatsPercentTopic({
   games?: number;
   rate: number;
   rateLabel: string;
+  rateTone: Tone;
+  rateCaption: string;
 }) {
   return (
     <section className="stats-topic">
       <h3 className="stats-topic__title">{title}</h3>
       <div className="stats-topic__panel stats-topic__panel--duo">
         <StatsFigure label={totalLabel} value={total} unit={totalUnit} games={games} />
-        <StatsFigure label={rateLabel} value={rate} rate />
+        <RateFigure label={rateLabel} rate={rate} tone={rateTone} caption={rateCaption} />
       </div>
     </section>
   );
@@ -317,25 +363,31 @@ export function StatsHeroSideboard({
         totalUnit="possessions"
         games={games}
         rate={summary.offensive1v1Share}
-        rateLabel="Offensive 1v1"
+        rateLabel="Ended in offensive 1v1"
+        rateTone="accent"
+        rateCaption={`${formatCount(summary.offensive1v1)} of ${formatCount(summary.possessions)} possessions`}
       />
       <StatsPercentTopic
         title="Offensive 1v1"
         total={summary.offensive1v1}
-        totalLabel="Offensive 1v1"
-        totalUnit="plays"
+        totalLabel="Total duels"
+        totalUnit="duels"
         games={games}
         rate={summary.offensiveProgressiveShare}
-        rateLabel="Progressive"
+        rateLabel="Progressive rate"
+        rateTone="positive"
+        rateCaption={`${formatCount(summary.offensiveProgressive)} of ${formatCount(summary.offensive1v1)} progressive`}
       />
       <StatsPercentTopic
         title="Defensive 1v1"
         total={summary.defensive1v1}
-        totalLabel="Defensive 1v1"
+        totalLabel="Total duels"
         totalUnit="duels"
         games={games}
         rate={summary.defensiveWinRate}
-        rateLabel="Won rate"
+        rateLabel="Win rate"
+        rateTone="positive"
+        rateCaption={`${formatCount(summary.defensiveWon)} of ${formatCount(summary.defensive1v1)} won`}
       />
     </div>
   );
@@ -355,9 +407,15 @@ export function FacingBoard({
       <StatsTriTopic
         title="Facing 1v1"
         total={facing.total}
-        totalLabel="Facing 1v1"
+        totalLabel="Total plays"
         totalUnit="plays"
         games={games}
+        rate={{
+          label: "Progressive rate",
+          value: percent(facing.progressivePlays, facing.total),
+          tone: "positive",
+          caption: `${formatCount(facing.progressivePlays)} of ${formatCount(facing.total)}`,
+        }}
         segments={playSegments(facing, videos)}
       />
       <div className="move-children">
@@ -373,6 +431,7 @@ export function FacingBoard({
               games={games}
               unit="plays"
               compact
+              shareOf={{ total: facing.total, label: "Facing 1v1" }}
             />
           ))}
         </div>
