@@ -255,10 +255,10 @@
         "videoLink": ""
       },
       "defensive1v1": {
-        "total": 0,
-        "won": 0,
-        "lost": 0,
-        "neutral": 0,
+        "total": 6,
+        "won": 3,
+        "lost": 2,
+        "neutral": 1,
         "videoLink": ""
       },
       "facing1v1": {
