@@ -346,3 +346,93 @@ export function toGameStats(report: StatsReport, match: MatchStats): GameStats {
     videos: match.videos,
   };
 }
+
+export type ProgressPoint = {
+  id: string;
+  label: string;
+  shortLabel: string;
+  logo: string;
+  quantity: number;
+  /** Success rate in percent (0-100). */
+  quality?: number;
+  qualityDetail?: string;
+};
+
+export type ProgressMetric = {
+  id: string;
+  title: string;
+  phase: "build-up" | "defensive";
+  quantityLabel: string;
+  qualityLabel?: string;
+  points: ProgressPoint[];
+};
+
+/** Metrics tracked in every match, ready for match-by-match trend charts. */
+export function progressMetrics(matches: MatchStats[]): ProgressMetric[] {
+  const base = (match: MatchStats) => ({
+    id: match.id,
+    label: match.label,
+    shortLabel: match.shortLabel,
+    logo: match.logo,
+  });
+  const share = (good: number, total: number) => (total > 0 ? (good / total) * 100 : 0);
+  const playMetric = (
+    id: string,
+    title: string,
+    quantityLabel: string,
+    pick: (match: MatchStats) => PlayBreakdown & { total: number },
+  ): ProgressMetric => ({
+    id,
+    title,
+    phase: "build-up",
+    quantityLabel,
+    qualityLabel: "Progressive",
+    points: matches.map((match) => {
+      const play = pick(match);
+      return {
+        ...base(match),
+        quantity: play.total,
+        quality: share(play.progressivePlays, play.total),
+        qualityDetail: `${play.progressivePlays} of ${play.total} progressive`,
+      };
+    }),
+  });
+
+  const classIds = [...new Set(matches.flatMap((match) => match.facing1v1.classes.map((move) => move.id)))].filter((id) =>
+    matches.every((match) => match.facing1v1.classes.some((move) => move.id === id)),
+  );
+
+  const metrics: ProgressMetric[] = [
+    {
+      id: "possessions",
+      title: "Possessions",
+      phase: "build-up",
+      quantityLabel: "Possessions",
+      points: matches.map((match) => ({ ...base(match), quantity: match.possessions.total })),
+    },
+    playMetric("offensive-1v1", "Offensive 1v1", "Duels", (match) => match.offensive1v1),
+    playMetric("facing-1v1", "Facing 1v1", "Plays", (match) => match.facing1v1),
+    ...classIds.map((id) =>
+      playMetric(`facing-${id}`, matches[0]?.facing1v1.classes.find((move) => move.id === id)?.label ?? id, "Plays", (match) => {
+        const move = match.facing1v1.classes.find((item) => item.id === id);
+        return move ?? { progressivePlays: 0, lostPlays: 0, neutralPlays: 0, total: 0 };
+      }),
+    ),
+    playMetric("back-1v1", "Back 1v1", "Plays", (match) => match.back1v1),
+    {
+      id: "defensive-1v1",
+      title: "Defensive 1v1",
+      phase: "defensive",
+      quantityLabel: "Duels",
+      qualityLabel: "Won",
+      points: matches.map((match) => ({
+        ...base(match),
+        quantity: match.defensive1v1.total,
+        quality: share(match.defensive1v1.won, match.defensive1v1.total),
+        qualityDetail: `${match.defensive1v1.won} of ${match.defensive1v1.total} won`,
+      })),
+    },
+  ];
+
+  return metrics;
+}

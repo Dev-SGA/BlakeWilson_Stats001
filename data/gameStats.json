@@ -236,6 +236,68 @@
           "url": "https://drive.google.com/file/d/18uzinE8C5gdc-Wee6SW3oBCdBfJ_LyAN/view?usp=drive_link"
         }
       ]
+    },
+    {
+      "id": "bavarian-united",
+      "kind": "session",
+      "label": "vs Bavarian United SC",
+      "shortLabel": "Bavarian United",
+      "logo": "/clubs/bavarian-united.png",
+      "possessions": {
+        "total": 47,
+        "videoLink": ""
+      },
+      "offensive1v1": {
+        "total": 32,
+        "progressivePlays": 15,
+        "lostPlays": 7,
+        "neutralPlays": 10,
+        "videoLink": ""
+      },
+      "defensive1v1": {
+        "total": 0,
+        "won": 0,
+        "lost": 0,
+        "neutral": 0,
+        "videoLink": ""
+      },
+      "facing1v1": {
+        "total": 27,
+        "progressivePlays": 13,
+        "lostPlays": 5,
+        "neutralPlays": 9,
+        "classes": [
+          {
+            "id": "get-away",
+            "label": "Get Away from Opposition",
+            "total": 19,
+            "progressivePlays": 8,
+            "lostPlays": 2,
+            "neutralPlays": 9
+          },
+          {
+            "id": "dribble",
+            "label": "Dribble Opponent",
+            "total": 8,
+            "progressivePlays": 5,
+            "lostPlays": 3,
+            "neutralPlays": 0
+          }
+        ],
+        "videoLink": ""
+      },
+      "back1v1": {
+        "total": 5,
+        "progressivePlays": 2,
+        "lostPlays": 2,
+        "neutralPlays": 1,
+        "videoLink": ""
+      },
+      "heatmap": {
+        "firstHalf": [],
+        "secondHalf": [],
+        "videoLink": ""
+      }
     }
   ]
 }
