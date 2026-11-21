@@ -65,6 +65,8 @@ export type MatchStats = {
     firstHalf: HeatPoint[];
     secondHalf: HeatPoint[];
     videoLink: string;
+    /** Optional annotation rendered under the heatmap (e.g. position change). */
+    note?: string;
   };
   videos?: { label: string; url: string }[];
   games?: number;

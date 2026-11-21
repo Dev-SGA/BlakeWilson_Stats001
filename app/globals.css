@@ -1113,6 +1113,16 @@ body::before {
   pointer-events: none;
 }
 
+.heatmap-card__note {
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  border-left: 3px solid var(--tone-accent);
+  background: rgba(74, 167, 224, 0.08);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--tone-muted, #8fa4b8);
+}
+
 .heatmap-legend {
   display: flex;
   align-items: center;

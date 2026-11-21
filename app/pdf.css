@@ -2076,3 +2076,10 @@
 .bw-children { gap: 6px; }
 .bw-card--fill .bw-defense__figures { gap: 18px; }
 .bw-card--fill .bw-tile { align-items: flex-start; }
+
+.bw-map-note {
+  margin: 8px 0 0;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: #8fa4b8;
+}

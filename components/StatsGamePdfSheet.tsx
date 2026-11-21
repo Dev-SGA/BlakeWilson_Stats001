@@ -329,6 +329,7 @@ function HeatmapCard({ heatmap }: { heatmap: GameStats["heatmap"] }) {
           </figure>
         ))}
       </div>
+      {heatmap.note ? <p className="bw-map-note">{heatmap.note}</p> : null}
     </section>
   );
 }

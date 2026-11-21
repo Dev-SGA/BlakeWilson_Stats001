@@ -201,6 +201,8 @@ export function HeatmapBoard({
           <span>High</span>
         </div>
       )}
+
+      {empty || !heatmap.note ? null : <p className="heatmap-card__note">{heatmap.note}</p>}
     </div>
   );
 }
