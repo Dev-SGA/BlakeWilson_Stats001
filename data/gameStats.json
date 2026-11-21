@@ -487,7 +487,9 @@
           }
         ],
         "videoLink": "",
-        "note": "Final 20 minutes: last 11 possessions — position change"
+        "note": "Final 20 minutes: last 11 possessions — position change",
+        "lateFrom": 15,
+        "lateLabel": "Last 20'"
       }
     }
   ]

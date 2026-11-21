@@ -67,6 +67,9 @@ export type MatchStats = {
     videoLink: string;
     /** Optional annotation rendered under the heatmap (e.g. position change). */
     note?: string;
+    /** Index in secondHalf where the late phase starts (enables the extra heatmap mode). */
+    lateFrom?: number;
+    lateLabel?: string;
   };
   videos?: { label: string; url: string }[];
   games?: number;
