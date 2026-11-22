@@ -1101,8 +1101,8 @@ body::before {
   aspect-ratio: 3 / 2;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  background: #0c2236;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 10px 28px rgba(0, 0, 0, 0.28);
+  background: #1d3a2a;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 10px 28px rgba(0, 0, 0, 0.28);
   overflow: hidden;
 }
 
@@ -1194,7 +1194,7 @@ body::before {
   flex: 0 0 140px;
   height: 6px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #265ca8, #2996d6, #48d6be, #a8e060, #fac43c, #f0543c);
+  background: linear-gradient(90deg, #fae060, #fca830, #f05c2c, #d62434);
 }
 
 .stats-topic__panel--duo .stats-figure:last-child {

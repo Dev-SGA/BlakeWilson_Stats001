@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { finalThirdCount, type HeatPoint, type MatchStats } from "@/lib/stats";
 
 type HeatMode = "all" | "first" | "second" | "late";
@@ -10,21 +10,104 @@ const FIELD_H = 80;
 const CANVAS_W = 1200;
 const CANVAS_H = 800;
 
-const STOPS: { at: number; color: [number, number, number] }[] = [
-  { at: 0, color: [38, 92, 168] },
-  { at: 0.28, color: [41, 150, 214] },
-  { at: 0.5, color: [72, 214, 190] },
-  { at: 0.68, color: [168, 224, 96] },
-  { at: 0.82, color: [250, 196, 60] },
-  { at: 1, color: [240, 84, 60] },
-];
+type Rgb = [number, number, number];
 
-function rampColor(t: number): [number, number, number] {
+export type HeatTheme = {
+  grass: string;
+  line: string;
+  lineWidth: number;
+  ramp: { at: number; color: Rgb }[];
+  sigma: number;
+  /** Density where colour starts to appear and where it reaches full opacity. */
+  fadeFrom: number;
+  fadeTo: number;
+  maxAlpha: number;
+  blur: number;
+  rounded: boolean;
+};
+
+export const HEAT_THEMES = {
+  current: {
+    grass: "#6f9350",
+    line: "rgba(16, 40, 16, 0.55)",
+    lineWidth: 0.55,
+    ramp: [
+      { at: 0, color: [216, 228, 106] },
+      { at: 0.32, color: [245, 208, 62] },
+      { at: 0.56, color: [239, 152, 42] },
+      { at: 0.8, color: [227, 90, 38] },
+      { at: 1, color: [203, 48, 34] },
+    ],
+    sigma: 3.4,
+    fadeFrom: 0.055,
+    fadeTo: 0.056,
+    maxAlpha: 0.92,
+    blur: 0,
+    rounded: true,
+  },
+  broadcast: {
+    grass: "#4d7a3c",
+    line: "rgba(255, 255, 255, 0.7)",
+    lineWidth: 0.42,
+    ramp: [
+      { at: 0, color: [255, 236, 120] },
+      { at: 0.35, color: [255, 196, 54] },
+      { at: 0.62, color: [244, 128, 36] },
+      { at: 0.84, color: [224, 58, 34] },
+      { at: 1, color: [178, 22, 30] },
+    ],
+    sigma: 4.1,
+    fadeFrom: 0.03,
+    fadeTo: 0.3,
+    maxAlpha: 0.9,
+    blur: 6,
+    rounded: false,
+  },
+  night: {
+    grass: "#1d3a2a",
+    line: "rgba(220, 240, 225, 0.42)",
+    lineWidth: 0.4,
+    ramp: [
+      { at: 0, color: [250, 224, 96] },
+      { at: 0.4, color: [252, 168, 48] },
+      { at: 0.7, color: [240, 92, 44] },
+      { at: 1, color: [214, 36, 52] },
+    ],
+    sigma: 4.4,
+    fadeFrom: 0.025,
+    fadeTo: 0.34,
+    maxAlpha: 0.95,
+    blur: 9,
+    rounded: true,
+  },
+  editorial: {
+    grass: "#a6bf8b",
+    line: "rgba(38, 64, 36, 0.7)",
+    lineWidth: 0.4,
+    ramp: [
+      { at: 0, color: [255, 232, 150] },
+      { at: 0.36, color: [247, 179, 71] },
+      { at: 0.68, color: [232, 98, 58] },
+      { at: 1, color: [168, 28, 46] },
+    ],
+    sigma: 3.8,
+    fadeFrom: 0.03,
+    fadeTo: 0.26,
+    maxAlpha: 0.88,
+    blur: 4,
+    rounded: false,
+  },
+} satisfies Record<string, HeatTheme>;
+
+export type HeatThemeId = keyof typeof HEAT_THEMES;
+export const DEFAULT_HEAT_THEME: HeatThemeId = "night";
+
+function rampColor(ramp: HeatTheme["ramp"], t: number): Rgb {
   const clamped = Math.min(Math.max(t, 0), 1);
-  for (let i = 1; i < STOPS.length; i += 1) {
-    if (clamped <= STOPS[i].at) {
-      const a = STOPS[i - 1];
-      const b = STOPS[i];
+  for (let i = 1; i < ramp.length; i += 1) {
+    if (clamped <= ramp[i].at) {
+      const a = ramp[i - 1];
+      const b = ramp[i];
       const f = (clamped - a.at) / (b.at - a.at || 1);
       return [
         Math.round(a.color[0] + (b.color[0] - a.color[0]) * f),
@@ -33,21 +116,24 @@ function rampColor(t: number): [number, number, number] {
       ];
     }
   }
-  return STOPS[STOPS.length - 1].color;
+  return ramp[ramp.length - 1].color;
+}
+
+function smoothstep(from: number, to: number, t: number): number {
+  const x = Math.min(Math.max((t - from) / (to - from || 1e-6), 0), 1);
+  return x * x * (3 - 2 * x);
 }
 
 const GRID_W = 360;
 const GRID_H = 240;
-const SIGMA = 6.2;
-const LEVELS = 9;
 
 /** Gaussian kernel density over the pitch, normalised so a single isolated touch never reads as "hot". */
-function densityGrid(points: HeatPoint[]): Float32Array {
+function densityGrid(points: HeatPoint[], sigma: number): Float32Array {
   const grid = new Float32Array(GRID_W * GRID_H);
   const sx = GRID_W / FIELD_W;
   const sy = GRID_H / FIELD_H;
-  const reach = SIGMA * 3;
-  const inv = 1 / (2 * SIGMA * SIGMA);
+  const reach = sigma * 3;
+  const inv = 1 / (2 * sigma * sigma);
   for (const point of points) {
     const x0 = Math.max(0, Math.floor((point.x - reach) * sx));
     const x1 = Math.min(GRID_W - 1, Math.ceil((point.x + reach) * sx));
@@ -63,19 +149,20 @@ function densityGrid(points: HeatPoint[]): Float32Array {
   }
   let max = 0;
   for (let i = 0; i < grid.length; i += 1) if (grid[i] > max) max = grid[i];
-  const norm = Math.max(max, 2.4);
+  const norm = Math.max(max, 1.8);
   for (let i = 0; i < grid.length; i += 1) grid[i] /= norm;
   return grid;
 }
 
-export function paintHeat(canvas: HTMLCanvasElement, points: HeatPoint[]) {
+export function paintHeat(canvas: HTMLCanvasElement, points: HeatPoint[], themeId: HeatThemeId = DEFAULT_HEAT_THEME) {
+  const theme: HeatTheme = HEAT_THEMES[themeId];
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   const { width, height } = canvas;
   ctx.clearRect(0, 0, width, height);
   if (points.length === 0) return;
 
-  const grid = densityGrid(points);
+  const grid = densityGrid(points, theme.sigma);
   const off = document.createElement("canvas");
   off.width = GRID_W;
   off.height = GRID_H;
@@ -84,32 +171,20 @@ export function paintHeat(canvas: HTMLCanvasElement, points: HeatPoint[]) {
 
   const image = octx.createImageData(GRID_W, GRID_H);
   const data = image.data;
-  const level = (t: number) => Math.min(LEVELS - 1, Math.floor(t * LEVELS));
+  const hard = theme.fadeTo - theme.fadeFrom < 0.01;
 
-  for (let gy = 0; gy < GRID_H; gy += 1) {
-    for (let gx = 0; gx < GRID_W; gx += 1) {
-      const idx = gy * GRID_W + gx;
-      const t = grid[idx];
-      if (t < 0.045) continue;
-      const o = idx * 4;
-      // Mostly smooth colour with a hint of stepped topographic levels.
-      const lv = level(t);
-      const tone = t * 0.78 + ((lv + 0.5) / LEVELS) * 0.22;
-      const [r, g, b] = rampColor(tone);
-      let alpha = Math.min(1, Math.pow((t - 0.045) / 0.955, 0.7) * 1.08) * 222;
-
-      // Thin contour lines where the level changes against a neighbour.
-      const right = gx + 1 < GRID_W ? level(grid[idx + 1]) : lv;
-      const down = gy + 1 < GRID_H ? level(grid[idx + GRID_W]) : lv;
-      const edge = t > 0.17 && (right !== lv || down !== lv);
-      const lift = edge ? 55 : 0;
-
-      data[o] = Math.min(255, r + lift);
-      data[o + 1] = Math.min(255, g + lift);
-      data[o + 2] = Math.min(255, b + lift);
-      if (edge) alpha = Math.min(255, alpha + 22);
-      data[o + 3] = Math.round(alpha);
-    }
+  for (let i = 0; i < grid.length; i += 1) {
+    const t = grid[i];
+    if (t < theme.fadeFrom) continue;
+    const o = i * 4;
+    const [r, g, b] = rampColor(theme.ramp, t);
+    const alpha = hard
+      ? Math.min(theme.maxAlpha, 0.22 + 0.74 * Math.pow(t, 0.75))
+      : theme.maxAlpha * smoothstep(theme.fadeFrom, theme.fadeTo, t) * (0.78 + 0.22 * t);
+    data[o] = r;
+    data[o + 1] = g;
+    data[o + 2] = b;
+    data[o + 3] = Math.round(alpha * 255);
   }
   octx.putImageData(image, 0, 0);
 
@@ -120,29 +195,28 @@ export function paintHeat(canvas: HTMLCanvasElement, points: HeatPoint[]) {
 
   ctx.save();
   ctx.beginPath();
-  ctx.roundRect(mx, my, mw, mh, 12);
+  ctx.roundRect(mx, my, mw, mh, theme.rounded ? 12 : 0);
   ctx.clip();
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
-  // Soft glow underneath, crisp layer on top.
-  ctx.globalAlpha = 0.5;
-  ctx.filter = "blur(14px)";
+  if (theme.blur > 0) ctx.filter = `blur(${theme.blur}px)`;
   ctx.drawImage(off, 0, 0, width, height);
   ctx.filter = "none";
-  ctx.globalAlpha = 1;
-  ctx.drawImage(off, 0, 0, width, height);
   ctx.restore();
 }
 
-export function PitchLines() {
-  const uid = useId().replace(/:/g, "");
-  const grass = `hm-grass-${uid}`;
-  const third = `hm-third-${uid}`;
-  const clip = `hm-clip-${uid}`;
-  const line = "rgba(255,255,255,0.34)";
-  const box = { fill: "none", stroke: line, strokeWidth: 0.55 } as const;
-  const stripes = Array.from({ length: 10 }, (_, i) => i);
-  const stripeW = (FIELD_W - 4) / stripes.length;
+/** Flat single-colour grass, painted under the heat layer. */
+export function PitchGrass({ theme = DEFAULT_HEAT_THEME }: { theme?: HeatThemeId }) {
+  return (
+    <svg className="heatmap-pitch__layer" viewBox={`0 0 ${FIELD_W} ${FIELD_H}`} preserveAspectRatio="none" aria-hidden="true">
+      <rect x="0" y="0" width={FIELD_W} height={FIELD_H} fill={HEAT_THEMES[theme].grass} />
+    </svg>
+  );
+}
+
+export function PitchLines({ theme = DEFAULT_HEAT_THEME }: { theme?: HeatThemeId }) {
+  const { line, lineWidth, rounded } = HEAT_THEMES[theme];
+  const box = { fill: "none", stroke: line, strokeWidth: lineWidth } as const;
   const mid = FIELD_H / 2;
   return (
     <svg
@@ -151,37 +225,10 @@ export function PitchLines() {
       preserveAspectRatio="none"
       aria-hidden="true"
     >
-      <defs>
-        <linearGradient id={grass} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#12304a" />
-          <stop offset="1" stopColor="#0c2236" />
-        </linearGradient>
-        <linearGradient id={third} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#4aa7e0" stopOpacity="0" />
-          <stop offset="1" stopColor="#4aa7e0" stopOpacity="0.16" />
-        </linearGradient>
-        <clipPath id={clip}>
-          <rect x="2" y="2" width={FIELD_W - 4} height={FIELD_H - 4} rx="1.5" />
-        </clipPath>
-      </defs>
-      <rect x="0" y="0" width={FIELD_W} height={FIELD_H} fill={`url(#${grass})`} />
-      <g clipPath={`url(#${clip})`}>
-        {stripes.map((i) => (
-          <rect
-            key={i}
-            x={2 + i * stripeW}
-            y="2"
-            width={stripeW}
-            height={FIELD_H - 4}
-            fill={i % 2 === 0 ? "#ffffff" : "#000000"}
-            opacity={i % 2 === 0 ? 0.035 : 0.06}
-          />
-        ))}
-        <rect x="80" y="2" width="38" height={FIELD_H - 4} fill={`url(#${third})`} />
-      </g>
-      <line x1="80" y1="2" x2="80" y2={FIELD_H - 2} stroke={line} strokeWidth="0.4" strokeDasharray="1.6 1.6" opacity="0.7" />
-      <rect x="2" y="2" width={FIELD_W - 4} height={FIELD_H - 4} rx="1.5" {...box} strokeWidth="0.7" />
-      <line x1={FIELD_W / 2} y1="2" x2={FIELD_W / 2} y2={FIELD_H - 2} stroke={line} strokeWidth="0.55" />
+
+      <line x1="80" y1="2" x2="80" y2={FIELD_H - 2} stroke={line} strokeWidth={lineWidth * 0.75} strokeDasharray="1.6 1.6" opacity="0.6" />
+      <rect x="2" y="2" width={FIELD_W - 4} height={FIELD_H - 4} rx={rounded ? 1.5 : 0} {...box} strokeWidth={lineWidth * 1.3} />
+      <line x1={FIELD_W / 2} y1="2" x2={FIELD_W / 2} y2={FIELD_H - 2} stroke={line} strokeWidth={lineWidth} />
       <circle cx={FIELD_W / 2} cy={mid} r="9.5" {...box} />
       <circle cx={FIELD_W / 2} cy={mid} r="0.9" fill={line} stroke="none" />
       <rect x="2" y="16" width="17" height="48" {...box} />
@@ -201,25 +248,36 @@ export function PitchLines() {
 }
 
 /** Pitch outline plus the heat layer, painted synchronously so PDF capture never sees an empty canvas. */
-export function HeatmapPitch({ points, className }: { points: HeatPoint[]; className?: string }) {
+export function HeatmapPitch({
+  points,
+  className,
+  theme = DEFAULT_HEAT_THEME,
+}: {
+  points: HeatPoint[];
+  className?: string;
+  theme?: HeatThemeId;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useLayoutEffect(() => {
-    if (canvasRef.current) paintHeat(canvasRef.current, points);
-  }, [points]);
+    if (canvasRef.current) paintHeat(canvasRef.current, points, theme);
+  }, [points, theme]);
 
   return (
-    <div className={className}>
-      <PitchLines />
+    <div className={className} style={{ background: HEAT_THEMES[theme].grass }}>
+      <PitchGrass theme={theme} />
       <canvas ref={canvasRef} className="heatmap-pitch__layer" width={CANVAS_W} height={CANVAS_H} />
+      <PitchLines theme={theme} />
     </div>
   );
 }
 
 export function HeatmapBoard({
   heatmap,
+  theme = DEFAULT_HEAT_THEME,
 }: {
   heatmap: MatchStats["heatmap"];
+  theme?: HeatThemeId;
 }) {
   const [mode, setMode] = useState<HeatMode>("all");
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -232,8 +290,8 @@ export function HeatmapBoard({
   }, [heatmap, mode]);
 
   useEffect(() => {
-    if (canvasRef.current) paintHeat(canvasRef.current, points);
-  }, [points]);
+    if (canvasRef.current) paintHeat(canvasRef.current, points, theme);
+  }, [points, theme]);
 
   const modes: { id: HeatMode; label: string; count: number }[] = [
     { id: "all", label: "All", count: heatmap.firstHalf.length + heatmap.secondHalf.length },
@@ -275,9 +333,10 @@ export function HeatmapBoard({
         )}
       </div>
 
-      <div className="heatmap-pitch">
-        <PitchLines />
+      <div className="heatmap-pitch" style={{ background: HEAT_THEMES[theme].grass }}>
+        <PitchGrass theme={theme} />
         <canvas ref={canvasRef} className="heatmap-pitch__layer" width={CANVAS_W} height={CANVAS_H} />
+        <PitchLines theme={theme} />
         {empty ? (
           <div className="heatmap-pitch__empty">
             <strong>Heatmap coming soon</strong>
